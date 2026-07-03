@@ -220,7 +220,7 @@ sections:
         run: "./logos/bin/logoscore call lez_core version"
         code_block: "logoscore call lez_core version"
         expect_contains:
-          - '"result":"0.2.0"'
+          - '"result":"0.3.0"'
 
       - title: "Encode an account id to base58"
         text: |

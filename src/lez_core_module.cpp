@@ -277,7 +277,7 @@ std::string LEZCoreModule::name() const {
 }
 
 std::string LEZCoreModule::version() const {
-    return "0.2.0";
+    return "0.3.0";
 }
 
 // === Account Management ===
@@ -1212,4 +1212,101 @@ std::string LEZCoreModule::get_sequencer_addr() {
     std::string value(addr);
     wallet_ffi_free_string(addr);
     return value;
+}
+
+// === Labels ===
+
+bool LEZCoreModule::check_label_available(const std::string& label) {
+    const char* label_c = label.c_str();
+
+    LabelAvailability label_check = wallet_ffi_check_label_available(
+        walletHandle,
+        label_c
+    );
+
+    if (label_check.error != SUCCESS) {
+        fprintf(stderr, "check_label_available: wallet FFI error %d\n", label_check.error);
+        return false;
+    }
+
+    return label_check.is_available;
+}
+
+int64_t LEZCoreModule::add_label(const std::string& label, const std::string& account_id_hex, bool is_private) {
+    const char* label_c = label.c_str();
+
+    FfiAccountIdWithPrivacy acc_id_with_privacy;
+
+    FfiBytes32 id{};
+    if (!hexToBytes32(account_id_hex, &id)) {
+        fprintf(stderr, "wallet_ffi_add_label: invalid account_id_hex");
+        return WalletFfiError::INVALID_ACCOUNT_ID;
+    }
+
+    acc_id_with_privacy.account_id = id;
+    acc_id_with_privacy.is_private = is_private;
+
+    WalletFfiError error = wallet_ffi_add_label(walletHandle, label_c, acc_id_with_privacy);
+    if (error != SUCCESS) {
+        fprintf(stderr, "wallet_ffi_add_label failed : wallet FFI error %d\n", error);
+    }
+
+    return SUCCESS;
+}
+
+std::string LEZCoreModule::resolve_label(const std::string& label) {
+    const char* label_c = label.c_str();
+
+    AccountIdResolvedFromLabel acc_id_res = wallet_ffi_resolve_label(
+        walletHandle,
+        label_c
+    );
+
+    if (acc_id_res.error != SUCCESS) {
+        fprintf(stderr, "wallet_ffi_resolve_label failed : wallet FFI error %d\n", acc_id_res.error);
+        return {};
+    }
+
+    std::string hexed_account_id = bytes32ToHex(acc_id_res.account_id.account_id);
+
+    if (acc_id_res.account_id.is_private) {
+        return "Private/" + hexed_account_id;
+    } else {
+        return "Public/" + hexed_account_id;
+    }
+}
+
+std::vector<std::string> LEZCoreModule::get_all_labels_for_account(const std::string& account_id_hex, bool is_private) {
+    FfiAccountIdWithPrivacy acc_id_with_privacy;
+
+    FfiBytes32 id{};
+    if (!hexToBytes32(account_id_hex, &id)) {
+        fprintf(stderr, "get_all_labels_for_account: invalid account_id_hex");
+        return {};
+    }
+
+    acc_id_with_privacy.account_id = id;
+    acc_id_with_privacy.is_private = is_private;
+
+    LabelList label_list = wallet_ffi_get_all_labels_for_account(walletHandle, acc_id_with_privacy);
+
+    if (label_list.error != SUCCESS) {
+        fprintf(stderr, "wallet_ffi_get_all_labels_for_account failed : wallet FFI error %d\n", label_list.error);
+        return {};
+    }
+
+    std::vector<std::string> result;
+    result.reserve(label_list.labels_size);
+
+    for (uintptr_t i = 0; i < label_list.labels_size; ++i) {
+        result.emplace_back(label_list.labels_data[i]);
+    }
+
+    WalletFfiError err = wallet_ffi_free_label_list(&label_list);
+
+    if (err != SUCCESS) {
+        fprintf(stderr, "wallet_ffi_free_label_list failed : wallet FFI error %d\n", err);
+    }
+
+    return result;
 }
