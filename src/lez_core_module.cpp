@@ -1306,6 +1306,7 @@ std::vector<std::string> LEZCoreModule::get_all_labels_for_account(const std::st
 
     if (err != SUCCESS) {
         fprintf(stderr, "wallet_ffi_free_label_list failed : wallet FFI error %d\n", err);
+        return {};
     }
 
     return result;
