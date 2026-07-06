@@ -1235,16 +1235,13 @@ bool LEZCoreModule::check_label_available(const std::string& label) {
 int64_t LEZCoreModule::add_label(const std::string& label, const std::string& account_id_hex, bool is_private) {
     const char* label_c = label.c_str();
 
-    FfiAccountIdWithPrivacy acc_id_with_privacy;
-
     FfiBytes32 id{};
     if (!hexToBytes32(account_id_hex, &id)) {
         fprintf(stderr, "wallet_ffi_add_label: invalid account_id_hex");
         return WalletFfiError::INVALID_ACCOUNT_ID;
     }
 
-    acc_id_with_privacy.account_id = id;
-    acc_id_with_privacy.is_private = is_private;
+    FfiAccountIdWithPrivacy acc_id_with_privacy = { id, is_private };
 
     WalletFfiError error = wallet_ffi_add_label(walletHandle, label_c, acc_id_with_privacy);
     if (error != SUCCESS) {
