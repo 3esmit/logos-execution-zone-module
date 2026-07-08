@@ -2584,7 +2584,7 @@
         "type": "github"
       }
     },
-    "logos-design-system_8": {
+    "logos-design-system_6": {
       "inputs": {
         "logos-nix": "logos-nix_218",
         "nixpkgs": [
@@ -2594,9 +2594,6 @@
           "logos-module-builder",
           "logos-standalone-app",
           "logos-liblogos",
-          "logos-capability-module",
-          "logos-module-builder",
-          "logos-standalone-app",
           "logos-capability-module",
           "logos-module-builder",
           "logos-standalone-app",
@@ -17701,62 +17698,6 @@
         "owner": "logos-co",
         "repo": "logos-rust-sdk",
         "rev": "270e4cf687896d501ed73c1409ea4157cc8a5b54",
-        "type": "github"
-      }
-    },
-    "logos-rust-sdk_2": {
-      "inputs": {
-        "logos-lidl": "logos-lidl_10",
-        "logos-logoscore-cli": [
-          "logos-module-builder",
-          "logos-standalone-app",
-          "logos-capability-module",
-          "logos-module-builder",
-          "logos-cpp-sdk"
-        ],
-        "logos-module-builder": [
-          "logos-module-builder",
-          "logos-standalone-app",
-          "logos-capability-module",
-          "logos-module-builder",
-          "logos-cpp-sdk"
-        ],
-        "logos-module-client": [
-          "logos-module-builder",
-          "logos-standalone-app",
-          "logos-capability-module",
-          "logos-module-builder",
-          "logos-cpp-sdk"
-        ],
-        "logos-nix": [
-          "logos-module-builder",
-          "logos-standalone-app",
-          "logos-capability-module",
-          "logos-module-builder",
-          "logos-nix"
-        ],
-        "nixpkgs": [
-          "logos-module-builder",
-          "logos-standalone-app",
-          "logos-capability-module",
-          "logos-module-builder",
-          "logos-rust-sdk",
-          "logos-nix",
-          "nixpkgs"
-        ]
-      },
-      "locked": {
-        "lastModified": 1782045655,
-        "narHash": "sha256-fprp1M+5opx3nfqAW+2HKcRUQyc+zqxsOxdNvpJFFv0=",
-        "owner": "logos-co",
-        "repo": "logos-rust-sdk",
-        "rev": "9957a9dd81c38c27e7021b623709129d3a4b7476",
-        "type": "github"
-      },
-      "original": {
-        "owner": "logos-co",
-        "repo": "logos-rust-sdk",
-        "rev": "9957a9dd81c38c27e7021b623709129d3a4b7476",
         "type": "github"
       }
     },
