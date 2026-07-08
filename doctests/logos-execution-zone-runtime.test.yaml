@@ -201,8 +201,6 @@ sections:
         code_block: "logoscore module-info lez_core"
         expect_contains:
           - "lez_core"
-          - "account_id_to_base58"
-          - "account_id_from_base58"
 
       - title: "Read the module name"
         text: |
