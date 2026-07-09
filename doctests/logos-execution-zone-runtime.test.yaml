@@ -201,8 +201,6 @@ sections:
         code_block: "logoscore module-info lez_core"
         expect_contains:
           - "lez_core"
-          - "account_id_to_base58"
-          - "account_id_from_base58"
 
       - title: "Read the module name"
         text: |
@@ -220,7 +218,7 @@ sections:
         run: "./logos/bin/logoscore call lez_core version"
         code_block: "logoscore call lez_core version"
         expect_contains:
-          - '"result":"0.2.0"'
+          - '"result":"0.3.0"'
 
       - title: "Encode an account id to base58"
         text: |

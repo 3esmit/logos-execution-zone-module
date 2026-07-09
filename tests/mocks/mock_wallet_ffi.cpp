@@ -533,4 +533,80 @@ char* wallet_ffi_get_sequencer_addr(WalletHandle*) {
     return strdup((addr && *addr) ? addr : "127.0.0.1:3000");
 }
 
+// === Labels === 
+
+LabelAvailability wallet_ffi_check_label_available(WalletHandle *handle, const char *label) {
+    LOGOS_CMOCK_RECORD("wallet_ffi_check_label_available");
+    const int err = LOGOS_CMOCK_RETURN(int, "wallet_ffi_check_label_available");
+
+    LabelAvailability label_availablility;
+
+    if (err == 0) {
+        label_availablility.is_available = true;
+    } else {
+        label_availablility.is_available = false;
+    }
+
+    label_availablility.error = static_cast<WalletFfiError>(err);
+
+    return label_availablility;
+} 
+
+WalletFfiError wallet_ffi_add_label(WalletHandle *handle, const char *label, FfiAccountIdWithPrivacy account_id_with_privacy) {
+    LOGOS_CMOCK_RECORD("wallet_ffi_add_label");
+    const int err = LOGOS_CMOCK_RETURN(int, "wallet_ffi_add_label");
+    return static_cast<WalletFfiError>(err);
+}
+
+AccountIdResolvedFromLabel wallet_ffi_resolve_label(WalletHandle *handle, const char *label) {
+    LOGOS_CMOCK_RECORD("wallet_ffi_resolve_label");
+    const int err = LOGOS_CMOCK_RETURN(int, "wallet_ffi_resolve_label");
+    FfiAccountIdWithPrivacy acc_id_with_privacy;
+    AccountIdResolvedFromLabel acc_id_res;
+
+    if (err == 0) {
+        const uint8_t value = static_cast<uint8_t>(LOGOS_CMOCK_RETURN(int, "get_acc_id_associated_with_label"));
+        for (int i = 0; i < 32; ++i) {
+            acc_id_with_privacy.account_id.data[i] = value;
+        }
+    }
+
+    acc_id_with_privacy.is_private = false;
+
+    acc_id_res.account_id = acc_id_with_privacy;
+    acc_id_res.error = static_cast<WalletFfiError>(err);
+
+    return acc_id_res;
+}
+
+LabelList wallet_ffi_get_all_labels_for_account(WalletHandle *handle, FfiAccountIdWithPrivacy account_id_with_privacy) {
+    LOGOS_CMOCK_RECORD("wallet_ffi_get_all_labels_for_account");
+    const int err = LOGOS_CMOCK_RETURN(int, "wallet_ffi_get_all_labels_for_account");
+
+    LabelList label_list;
+
+    if (err == 0) {
+        static std::vector<const char*> labelsData = { "Label1", "Label2" };
+
+        label_list.labels_data = labelsData.data();
+        label_list.labels_size = labelsData.size();
+    } else {
+        label_list.labels_data = nullptr;
+        label_list.labels_size = 0;
+    }
+
+    label_list.error = static_cast<WalletFfiError>(err);
+
+    return label_list;
+}
+
+WalletFfiError wallet_ffi_free_label_list(LabelList *label_list) {
+    LOGOS_CMOCK_RECORD("wallet_ffi_free_label_list");
+    if (label_list && label_list->labels_data) {
+        free(const_cast<char**>(label_list->labels_data));
+        label_list->labels_data = nullptr;
+        label_list->labels_size = 0;
+    }
+}
+
 } // extern "C"

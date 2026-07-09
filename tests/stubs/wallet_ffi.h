@@ -21,6 +21,7 @@ typedef enum WalletFfiError {
     INTERNAL_ERROR = 1,
     INVALID_INPUT = 2,
     NOT_FOUND = 3,
+    INVALID_ACCOUNT_ID = 4
 } WalletFfiError;
 
 // Opaque wallet handle.
@@ -166,6 +167,27 @@ typedef struct FfiCreateWalletOutput {
    */
   char *mnemonic;
 } FfiCreateWalletOutput;
+
+typedef struct LabelAvailability {
+  bool is_available;
+  enum WalletFfiError error;
+} LabelAvailability;
+
+typedef struct FfiAccountIdWithPrivacy {
+  struct FfiBytes32 account_id;
+  bool is_private;
+} FfiAccountIdWithPrivacy;
+
+typedef struct AccountIdResolvedFromLabel {
+  struct FfiAccountIdWithPrivacy account_id;
+  enum WalletFfiError error;
+} AccountIdResolvedFromLabel;
+
+typedef struct LabelList {
+  const char **labels_data;
+  uintptr_t labels_size;
+  enum WalletFfiError error;
+} LabelList;
 
 // === Lifecycle ===
 
@@ -316,6 +338,23 @@ WalletFfiError wallet_ffi_vault_claim_private(
 // === Configuration ===
 
 char* wallet_ffi_get_sequencer_addr(WalletHandle* handle);
+
+// === Labels ===
+
+LabelAvailability wallet_ffi_check_label_available(WalletHandle *handle,
+                                                          const char *label);
+                                                          
+WalletFfiError wallet_ffi_add_label(WalletHandle *handle,
+                                         const char *label,
+                                         FfiAccountIdWithPrivacy account_id_with_privacy);
+
+AccountIdResolvedFromLabel wallet_ffi_resolve_label(WalletHandle *handle,
+                                                           const char *label);
+
+LabelList wallet_ffi_get_all_labels_for_account(WalletHandle *handle,
+                                                       FfiAccountIdWithPrivacy account_id_with_privacy);
+
+WalletFfiError wallet_ffi_free_label_list(LabelList *label_list);
 
 #ifdef __cplusplus
 }

@@ -92,6 +92,12 @@ public:
     // === Configuration ===
     std::string get_sequencer_addr();
 
+    // === Labels ===
+    bool check_label_available(const std::string& label);
+    int64_t add_label(const std::string& label, const std::string& account_id_hex, bool is_private);
+    std::string resolve_label(const std::string& label);
+    std::vector<std::string> get_all_labels_for_account(const std::string& account_id_hex, bool is_private);
+
 private:
     WalletHandle* walletHandle = nullptr;
 };
