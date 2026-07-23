@@ -107,10 +107,10 @@ sections:
           Build the `#lgx` output and link it as `./lez-lgx`. (This compiles the
           module and the `wallet_ffi` library it depends on through Nix, so the
           first build is slow.)
-        run: "nix build 'github:logos-blockchain/logos-execution-zone-module{release}#lgx' -o lez-lgx"
+        run: "nix build 'github:3esmit/logos-execution-zone-module{release}#lgx' -o lez-lgx"
         code_block: |
           # From inside the clone this is simply: nix build '.#lgx'
-          nix build 'github:logos-blockchain/logos-execution-zone-module{release}#lgx' -o lez-lgx
+          nix build 'github:3esmit/logos-execution-zone-module{release}#lgx' -o lez-lgx
         post_text: "The `.lgx` package is now under `./lez-lgx/`:"
         extra_run:
           run: "ls lez-lgx/*.lgx"
@@ -213,12 +213,18 @@ sections:
 
       - title: "Read the module version"
         text: |
-          `version` returns the module's semantic version (`0.2.0`), matching
-          `metadata.json`:
-        run: "./logos/bin/logoscore call lez_core version"
-        code_block: "logoscore call lez_core version"
-        expect_contains:
-          - '"result":"0.3.0"'
+          `version` returns the module's semantic version. The runtime result must
+          match the manifest packaged from the same source commit:
+        run: |
+          EXPECTED_VERSION=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' modules/lez_core/manifest.json | head -n 1)
+          test -n "$EXPECTED_VERSION"
+          RESPONSE=$(./logos/bin/logoscore call lez_core version)
+          printf 'expected version: %s\n%s\n' "$EXPECTED_VERSION" "$RESPONSE"
+          ACTUAL_VERSION=$(printf '%s' "$RESPONSE" | sed -n 's/.*"result"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p')
+          test "$ACTUAL_VERSION" = "$EXPECTED_VERSION"
+        code_block: |
+          EXPECTED_VERSION=$(sed -n 's/.*"version"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' modules/lez_core/manifest.json)
+          logoscore call lez_core version  # must equal "$EXPECTED_VERSION"
 
       - title: "Encode an account id to base58"
         text: |
