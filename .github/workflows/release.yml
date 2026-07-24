@@ -1,0 +1,46 @@
+name: Publish LEZ Core
+
+on:
+  workflow_dispatch:
+    inputs:
+      force_build:
+        description: "Rebuild and replace an existing package release for this version."
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Validate source release contract
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+
+      - name: Validate release identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          test "$(jq -r '.name' metadata.json)" = "lez_core"
+          version="$(jq -er '.version | strings | select(length > 0)' metadata.json)"
+          grep -Fq "## [${version}]" CHANGELOG.md
+          grep -Fq "return \"${version}\";" src/lez_core_module.cpp
+
+  release:
+    needs: preflight
+    permissions:
+      contents: write
+    uses: 3esmit/logos-modules-release-action/.github/workflows/release.yml@v1.0.3
+    with:
+      module_path: .
+      metadata_path: metadata.json
+      build_attr: lgx-portable
+      variants: linux-amd64,darwin-arm64
+      require_all_variants: true
+      dispatch_rebuild_index: false
+      prerelease: true
+      signing_mode: none
+      skip_if_published: ${{ !inputs.force_build }}

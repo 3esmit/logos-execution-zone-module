@@ -15,7 +15,7 @@ intro: |
      so building it brings in the whole module-runtime stack (`logos_host`,
      `liblogos_core`, the IPC layer).
   2. Build **this** execution-zone module as an installable `.lgx` package
-     straight from its own flake's `#lgx` output, **pinned to the commit under
+     straight from its own flake's `#lgx-portable` output, **pinned to the commit under
      test** — so the module you run is built from exactly what is checked out
      here, not the latest published release.
   3. Install the `.lgx` into a `./modules` directory with `lgpm`.
@@ -40,7 +40,7 @@ what_you_build: "This `logos_execution_zone` module, packaged as `.lgx`, install
 
 what_you_learn:
   - How to build the `logoscore` runtime and the `lgpm` package manager from their flakes
-  - How a module's flake exposes a ready-to-install `.lgx` via its `#lgx` output
+  - How a module's flake exposes a portable `.lgx` via its `#lgx-portable` output
   - How to install an `.lgx` into a modules directory with `lgpm`
   - How to start the `logoscore` daemon, load a module, introspect it, and call its methods
   - How to shut the daemon down and confirm it has exited
@@ -92,10 +92,10 @@ sections:
     step: true
     text: |
       Build **this** execution-zone module's `.lgx` straight from its flake's
-      `#lgx` output and install it into a local `./modules` directory with `lgpm`.
+      `#lgx-portable` output and install it into a local `./modules` directory with `lgpm`.
       Every module built with
       [`logos-module-builder`](https://github.com/logos-co/logos-module-builder)
-      exposes a ready-to-install `#lgx`.
+      exposes a ready-to-install `#lgx-portable`.
 
       > The `{release}` in the URL is what pins the build to a specific commit: the
       > doc-test runner expands it to a concrete ref. Locally that is this
@@ -104,13 +104,13 @@ sections:
     steps:
       - title: "Build the module's .lgx"
         text: |
-          Build the `#lgx` output and link it as `./lez-lgx`. (This compiles the
+          Build the `#lgx-portable` output and link it as `./lez-lgx`. (This compiles the
           module and the `wallet_ffi` library it depends on through Nix, so the
           first build is slow.)
-        run: "nix build 'github:3esmit/logos-execution-zone-module{release}#lgx' -o lez-lgx"
+        run: "nix build 'github:3esmit/logos-execution-zone-module{release}#lgx-portable' -o lez-lgx"
         code_block: |
-          # From inside the clone this is simply: nix build '.#lgx'
-          nix build 'github:3esmit/logos-execution-zone-module{release}#lgx' -o lez-lgx
+          # From inside the clone this is simply: nix build '.#lgx-portable'
+          nix build 'github:3esmit/logos-execution-zone-module{release}#lgx-portable' -o lez-lgx
         post_text: "The `.lgx` package is now under `./lez-lgx/`:"
         extra_run:
           run: "ls lez-lgx/*.lgx"
@@ -129,7 +129,7 @@ sections:
         text: |
           Install the freshly-built package into `./modules`. `logos_execution_zone`
           is a `core` module, so it goes to `--modules-dir`. The package is unsigned
-          (a local dev build), so we pass `--allow-unsigned`.
+          (a local portable build), so we pass `--allow-unsigned`.
         run: "./lgpm/bin/lgpm --modules-dir ./modules --allow-unsigned install --file lez-lgx/*.lgx"
         expect_contains:
           - "Installed to:"
