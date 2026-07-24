@@ -15,7 +15,9 @@ jobs:
   build-and-test:
     name: Build and test (Ubuntu)
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The initial Linux Nix closure can exceed 30 minutes before source tests
+    # begin, even with the public Cachix cache enabled.
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
