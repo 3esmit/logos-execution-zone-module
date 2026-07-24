@@ -76,7 +76,7 @@ sections:
           `capability_module` (required for the auth handshake when loading
           modules).
 
-  - title: "Build the lgpm package manager"
+  - title: "Build the portable lgpm package manager"
     step: true
     text: |
       `lgpm` installs `.lgx` packages into a modules directory and scans what is
@@ -84,7 +84,7 @@ sections:
       `./lgpm`.
     steps:
       - title: "Build lgpm"
-        run: "nix build 'github:logos-co/logos-package-manager#cli' -o lgpm"
+        run: "nix build 'github:logos-co/logos-package-manager#cli-portable' -o lgpm"
         check_file: "lgpm/bin/lgpm"
         post_text: "The executable is at `./lgpm/bin/lgpm`."
 
