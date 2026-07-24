@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <random>
+#include <string_view>
 #include <vector>
 
 #include <nlohmann/json.hpp>
@@ -59,6 +60,35 @@ constexpr auto AccountId = "account_id";
 constexpr auto IsPublic = "is_public";
 constexpr auto Secrets = "secrets";
 } // namespace JsonKeys
+
+constexpr std::string_view LezTestnetSequencerAddress = "https://testnet.lez.logos.co";
+constexpr std::string_view LezTestnetAuthenticatedTransferProgramId =
+    "dcbbfebcd59399961ed9973b8307dc475fd4c5ca5779aacfe7588f7dbc3f4a71";
+
+bool isLezTestnetSequencer(std::string address) {
+    while (!address.empty() && address.back() == '/') {
+        address.pop_back();
+    }
+    return address == LezTestnetSequencerAddress;
+}
+
+std::vector<uint32_t> authenticatedTransferWords(const uint8_t (&amount)[16]) {
+    std::vector<uint32_t> words;
+    words.reserve(5);
+    // RISC Zero serde encodes the Transfer enum variant first, then a u128 as
+    // four little-endian u32 words. The deployed Testnet program reads this
+    // exact representation through read_lee_inputs.
+    words.push_back(0);
+    for (size_t offset = 0; offset < sizeof(amount); offset += sizeof(uint32_t)) {
+        words.push_back(
+            static_cast<uint32_t>(amount[offset])
+            | (static_cast<uint32_t>(amount[offset + 1]) << 8U)
+            | (static_cast<uint32_t>(amount[offset + 2]) << 16U)
+            | (static_cast<uint32_t>(amount[offset + 3]) << 24U)
+        );
+    }
+    return words;
+}
 
 bool hexToBytes(const std::string& hex, std::vector<uint8_t>& output_bytes, int expectedLength = -1) {
     // Trim whitespace.
@@ -277,7 +307,7 @@ std::string LEZCoreModule::name() const {
 }
 
 std::string LEZCoreModule::version() const {
-    return "0.3.0";
+    return "0.3.1";
 }
 
 // === Account Management ===
@@ -592,6 +622,15 @@ std::string LEZCoreModule::transfer_public(
         return transferResultToJson(nullptr, "transfer_public: amount_le16_hex must be 32 hex characters (16 bytes)");
     }
 
+    if (isLezTestnetSequencer(get_sequencer_addr())) {
+        return send_generic_public_transaction(
+            {from_hex, to_hex},
+            {true, false},
+            authenticatedTransferWords(amount),
+            std::string(LezTestnetAuthenticatedTransferProgramId)
+        );
+    }
+
     FfiTransferResult result{};
     const WalletFfiError error = wallet_ffi_transfer_public(walletHandle, &fromId, &toId, &amount, &result);
     if (error != SUCCESS) {
@@ -782,6 +821,17 @@ std::string LEZCoreModule::register_public_account(const std::string& account_id
         fprintf(stderr, "register_public_account: invalid account_id_hex\n");
         return transferResultToJson(nullptr, "register_public_account: invalid account_id_hex");
     }
+
+    if (isLezTestnetSequencer(get_sequencer_addr())) {
+        // AuthenticatedTransferInstruction::Initialize is enum variant 1.
+        return send_generic_public_transaction(
+            {account_id_hex},
+            {true},
+            {1},
+            std::string(LezTestnetAuthenticatedTransferProgramId)
+        );
+    }
+
     FfiTransferResult result{};
     const WalletFfiError error = wallet_ffi_register_public_account(walletHandle, &id, &result);
     if (error != SUCCESS) {
@@ -973,10 +1023,23 @@ std::string LEZCoreModule::send_generic_public_transaction(
         const std::vector<uint32_t>& instruction,
         const std::string& program_id_hex
 ) {
+    if (account_ids.empty()) {
+        fprintf(stderr, "send_generic_public_transaction: account_ids must not be empty\n");
+        return transferResultToJson(nullptr, "send_generic_public_transaction: account_ids must not be empty");
+    }
+    if (account_ids.size() != signing_requirements.size()) {
+        fprintf(stderr, "send_generic_public_transaction: account_ids and signing_requirements must have the same size\n");
+        return transferResultToJson(nullptr, "send_generic_public_transaction: account_ids and signing_requirements must have the same size");
+    }
+    if (instruction.empty()) {
+        fprintf(stderr, "send_generic_public_transaction: instruction must not be empty\n");
+        return transferResultToJson(nullptr, "send_generic_public_transaction: instruction must not be empty");
+    }
+
     std::vector<FfiAccountIdentity> identities_resolved;
     identities_resolved.reserve(account_ids.size());
 
-    for (int i = 0; i < account_ids.size(); ++i) {
+    for (size_t i = 0; i < account_ids.size(); ++i) {
         FfiAccountIdentity acc_identity{};
 
         FfiBytes32 id{};
@@ -987,7 +1050,7 @@ std::string LEZCoreModule::send_generic_public_transaction(
 
         WalletFfiError error = wallet_ffi_resolve_public_account(id, signing_requirements[i], &acc_identity);
         if (error != SUCCESS) {
-            fprintf(stderr, "wallet_ffi_resolve_public_account failed for index %d: wallet FFI error %d\n", i, error);
+            fprintf(stderr, "wallet_ffi_resolve_public_account failed for index %zu: wallet FFI error %d\n", i, error);
             return transferResultToJson(nullptr, std::string("wallet_ffi_resolve_public_account: wallet FFI error ") + std::to_string(error));
         }
         identities_resolved.push_back(acc_identity);

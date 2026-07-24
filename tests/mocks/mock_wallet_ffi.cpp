@@ -22,6 +22,10 @@ extern "C" {
 namespace MockWalletFfiCapture {
 uint8_t lastTransferShieldedIdentifier[16] = {0};
 uint8_t lastTransferPrivateIdentifier[16] = {0};
+std::vector<uint32_t> lastGenericPublicInstructionWords;
+std::array<uint8_t, 32> lastGenericPublicProgramId{};
+std::vector<std::array<uint8_t, 32>> lastGenericPublicAccountIds;
+std::vector<int> lastGenericPublicAccountKinds;
 } // namespace MockWalletFfiCapture
 
 namespace {
@@ -427,7 +431,12 @@ WalletFfiError wallet_ffi_amm_elf(FfiProgram *ffi_program) {
 
 WalletFfiError wallet_ffi_resolve_public_account(FfiBytes32 account_id, bool needs_sign, FfiAccountIdentity *out_account_identity) {
     LOGOS_CMOCK_RECORD("wallet_ffi_resolve_public_account");
-    return fillPublicAccountIdentity("wallet_ffi_resolve_public_account", out_account_identity);
+    const WalletFfiError error = fillPublicAccountIdentity("wallet_ffi_resolve_public_account", out_account_identity);
+    if (error == SUCCESS && out_account_identity) {
+        out_account_identity->kind = needs_sign ? FfiAccountIdentityKind::PUBLIC : FfiAccountIdentityKind::PUBLIC_NO_SIGN;
+        memcpy(out_account_identity->account_id.data, account_id.data, sizeof(account_id.data));
+    }
+    return error;
 }
 
 WalletFfiError wallet_ffi_resolve_private_account(WalletHandle *handle, FfiBytes32 account_id, FfiAccountIdentity *out_account_identity){
@@ -474,6 +483,25 @@ WalletFfiError wallet_ffi_send_generic_public_transaction(WalletHandle *handle, 
 uintptr_t account_identities_size, const uint32_t *instruction_words, uintptr_t instruction_words_size,
 FfiProgramId program_id, FfiTransactionResult *out_result) {
     LOGOS_CMOCK_RECORD("wallet_ffi_send_generic_public_transaction");
+    MockWalletFfiCapture::lastGenericPublicInstructionWords.assign(
+        instruction_words,
+        instruction_words + instruction_words_size
+    );
+    memcpy(
+        MockWalletFfiCapture::lastGenericPublicProgramId.data(),
+        program_id.data,
+        MockWalletFfiCapture::lastGenericPublicProgramId.size()
+    );
+    MockWalletFfiCapture::lastGenericPublicAccountIds.clear();
+    MockWalletFfiCapture::lastGenericPublicAccountKinds.clear();
+    for (uintptr_t index = 0; index < account_identities_size; ++index) {
+        std::array<uint8_t, 32> account_id{};
+        memcpy(account_id.data(), account_identities[index].account_id.data, account_id.size());
+        MockWalletFfiCapture::lastGenericPublicAccountIds.push_back(account_id);
+        MockWalletFfiCapture::lastGenericPublicAccountKinds.push_back(
+            static_cast<int>(account_identities[index].kind)
+        );
+    }
     return fillTransactionResult("wallet_ffi_send_generic_public_transaction", out_result);
 }
 
