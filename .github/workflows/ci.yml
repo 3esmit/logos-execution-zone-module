@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
     branches: [master, main]
   push:
@@ -12,13 +13,11 @@ concurrency:
 
 jobs:
   build-and-test:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-15]
-
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    name: Build and test (Ubuntu)
+    runs-on: ubuntu-latest
+    # The initial Linux Nix closure can exceed 30 minutes before source tests
+    # begin, even with the public Cachix cache enabled.
+    timeout-minutes: 60
 
     steps:
       - name: Checkout
