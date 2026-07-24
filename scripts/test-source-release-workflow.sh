@@ -6,7 +6,8 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$repo_root"
 
 workflow=".github/workflows/release.yml"
-action_ref="3esmit/logos-modules-release-action/.github/workflows/release.yml@81f506530c56e8757e6d99ee7f9d4c092e74411c"
+action_workflow="3esmit/logos-modules-release-action/.github/workflows/release.yml"
+action_ref="${action_workflow}@81f506530c56e8757e6d99ee7f9d4c092e74411c"
 
 assert_workflow_line() {
   local expected="$1"
@@ -34,6 +35,6 @@ assert_workflow_line "      prerelease: true"
 assert_workflow_line "      install_macos_metal_toolchain: true"
 assert_workflow_line "      signing_mode: none"
 
-test "$(grep -Fc "$action_ref" "$workflow")" -eq 1
+test "$(grep -Fc "uses: ${action_workflow}@" "$workflow")" -eq 1
 
 printf 'source release workflow contract valid for lez_core v%s\n' "$version"
