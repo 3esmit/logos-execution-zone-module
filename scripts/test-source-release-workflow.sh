@@ -24,6 +24,29 @@ version="$(jq -er '.version | strings | select(length > 0)' metadata.json)"
 grep -Fq "## [${version}]" CHANGELOG.md
 grep -Fq "return \"${version}\";" src/lez_core_module.cpp
 
+execution_zone_rev="$(
+  jq -er '
+    .nodes[.nodes.root.inputs["logos-execution-zone"]].locked
+    | select(
+        .type == "github"
+        and .owner == "3esmit"
+        and .repo == "logos-execution-zone"
+        and (.rev | test("^[0-9a-f]{40}$"))
+      )
+    | .rev
+  ' flake.lock
+)"
+jq -e --arg rev "$execution_zone_rev" '
+  .nodes[.nodes.root.inputs["logos-execution-zone"]]
+  | .original.type == "github"
+    and .original.owner == "3esmit"
+    and .original.repo == "logos-execution-zone"
+    and .original.rev == $rev
+' flake.lock >/dev/null
+grep -Fqx \
+  "    logos-execution-zone.url = \"github:3esmit/logos-execution-zone?rev=${execution_zone_rev}\";" \
+  flake.nix
+
 assert_workflow_line "    uses: ${action_ref}"
 assert_workflow_line "      module_path: ."
 assert_workflow_line "      metadata_path: metadata.json"

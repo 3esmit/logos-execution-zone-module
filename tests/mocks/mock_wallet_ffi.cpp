@@ -26,6 +26,8 @@ std::vector<uint32_t> lastGenericPublicInstructionWords;
 std::array<uint8_t, 32> lastGenericPublicProgramId{};
 std::vector<std::array<uint8_t, 32>> lastGenericPublicAccountIds;
 std::vector<int> lastGenericPublicAccountKinds;
+std::string lastCreateStatisticsPath;
+std::string lastOpenStatisticsPath;
 } // namespace MockWalletFfiCapture
 
 namespace {
@@ -58,8 +60,9 @@ extern "C" {
 
 // === Lifecycle ===
 
-FfiCreateWalletOutput wallet_ffi_create_new(const char*, const char*, const char*) {
+FfiCreateWalletOutput wallet_ffi_create_new(const char*, const char*, const char* statistics_path, const char*) {
     LOGOS_CMOCK_RECORD("wallet_ffi_create_new");
+    MockWalletFfiCapture::lastCreateStatisticsPath = statistics_path ? statistics_path : "";
     const int ok = LOGOS_CMOCK_RETURN(int, "wallet_ffi_create_new");
     const char* mnemonic_ok = LOGOS_CMOCK_RETURN_STRING("wallet_ffi_create_new");
     FfiCreateWalletOutput output;
@@ -69,8 +72,9 @@ FfiCreateWalletOutput wallet_ffi_create_new(const char*, const char*, const char
     return output;
 }
 
-WalletHandle* wallet_ffi_open(const char*, const char*) {
+WalletHandle* wallet_ffi_open(const char*, const char*, const char* statistics_path) {
     LOGOS_CMOCK_RECORD("wallet_ffi_open");
+    MockWalletFfiCapture::lastOpenStatisticsPath = statistics_path ? statistics_path : "";
     const int ok = LOGOS_CMOCK_RETURN(int, "wallet_ffi_open");
     return ok ? reinterpret_cast<WalletHandle*>(&g_fakeWallet) : nullptr;
 }

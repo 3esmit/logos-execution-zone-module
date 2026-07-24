@@ -4,6 +4,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <filesystem>
 #include <random>
 #include <string_view>
 #include <vector>
@@ -21,6 +22,10 @@ std::string bytesToHex(const uint8_t* data, const size_t length) {
         out.push_back(hexChars[data[i] & 0xF]);
     }
     return out;
+}
+
+std::string statisticsPathForStorage(const std::string& storagePath) {
+    return (std::filesystem::path(storagePath).parent_path() / "statistics.json").string();
 }
 
 // Balance from wallet_ffi_get_balance is 16 bytes little-endian (u128). Convert to decimal string for UI.
@@ -307,7 +312,7 @@ std::string LEZCoreModule::name() const {
 }
 
 std::string LEZCoreModule::version() const {
-    return "0.3.1";
+    return "0.4.0-alpha.1";
 }
 
 // === Account Management ===
@@ -1220,7 +1225,9 @@ std::string LEZCoreModule::create_new(
         return {};
     }
 
-    FfiCreateWalletOutput create_output = wallet_ffi_create_new(config_path.c_str(), storage_path.c_str(), password.c_str());
+    const std::string statistics_path = statisticsPathForStorage(storage_path);
+    FfiCreateWalletOutput create_output =
+        wallet_ffi_create_new(config_path.c_str(), storage_path.c_str(), statistics_path.c_str(), password.c_str());
     if (!create_output.wallet) {
         fprintf(stderr, "create_new: wallet_ffi_create_new returned null\n");
         return {};
@@ -1250,7 +1257,8 @@ int64_t LEZCoreModule::open(const std::string& config_path, const std::string& s
         return INTERNAL_ERROR;
     }
 
-    walletHandle = wallet_ffi_open(config_path.c_str(), storage_path.c_str());
+    const std::string statistics_path = statisticsPathForStorage(storage_path);
+    walletHandle = wallet_ffi_open(config_path.c_str(), storage_path.c_str(), statistics_path.c_str());
     if (!walletHandle) {
         fprintf(stderr, "open: wallet_ffi_open returned null\n");
         return INTERNAL_ERROR;
