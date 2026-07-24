@@ -61,8 +61,28 @@ jobs:
           name: logos-co
           authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
+      - name: Prepare macOS Metal Toolchain
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
+          xcodebuild -downloadComponent metalToolchain
+          env -u DEVELOPER_DIR -u SDKROOT xcrun --sdk macosx --find metal
+          env -u DEVELOPER_DIR -u SDKROOT xcrun --sdk macosx --find metallib
+
       - name: Build portable package
-        run: nix build .#lgx-portable -L
+        shell: bash
+        env:
+          HOST_METAL_BUILD: ${{ runner.os == 'macOS' }}
+        run: |
+          set -euo pipefail
+          nix_args=(build)
+          if [[ "$HOST_METAL_BUILD" == "true" ]]; then
+            nix_args+=(--option sandbox false)
+          fi
+          nix_args+=(.#lgx-portable -L)
+          nix "${nix_args[@]}"
 
       - name: Run tests
         run: nix build .#unit-tests -L
