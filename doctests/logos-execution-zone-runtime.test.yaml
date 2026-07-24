@@ -58,17 +58,19 @@ prerequisites:
   - "**A Linux or macOS machine.**"
 
 sections:
-  - title: "Build logoscore"
+  - title: "Build the portable logoscore runtime"
     step: true
     text: |
-      Build the `logoscore` CLI from its published flake. The result is symlinked to
-      `./logos/`. `logoscore` is the headless frontend for `logos-liblogos`, so this
-      one build brings in the whole module-runtime stack the daemon needs.
+      Build the portable `logoscore` bundle from its published flake. The result
+      is symlinked to `./logos/`. `logoscore` is the headless frontend for
+      `logos-liblogos`, so this one build brings in the whole module-runtime
+      stack the daemon needs. Its portable module flavor matches the portable
+      `.lgx` installed below.
     steps:
-      - title: "Build the CLI"
-        run: "nix build 'github:logos-co/logos-logoscore-cli' --out-link ./logos"
+      - title: "Build the portable CLI bundle"
+        run: "nix build 'github:logos-co/logos-logoscore-cli#cli-bundle-dir' --out-link ./logos"
         code_block: |
-          nix build 'github:logos-co/logos-logoscore-cli' --out-link ./logos
+          nix build 'github:logos-co/logos-logoscore-cli#cli-bundle-dir' --out-link ./logos
         check_file: "logos/bin/logoscore"
         post_text: |
           The build produces `logos/bin/logoscore` plus bundled runtime libraries
