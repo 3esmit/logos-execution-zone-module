@@ -31,7 +31,7 @@ static nlohmann::json parseObject(const std::string& json) {
 LOGOS_TEST(name_and_version) {
     LEZCoreModule module;
     LOGOS_ASSERT_EQ(module.name(), std::string("lez_core"));
-    LOGOS_ASSERT_EQ(module.version(), std::string("0.3.1"));
+    LOGOS_ASSERT_EQ(module.version(), std::string("0.4.0-alpha.1"));
 }
 
 // ============================================================================
@@ -691,6 +691,7 @@ LOGOS_TEST(create_new_success_then_double_open_fails) {
 
     LOGOS_ASSERT_TRUE(!module.create_new("/cfg", "/store", "pw").empty());
     LOGOS_ASSERT(t.cFunctionCalled("wallet_ffi_create_new"));
+    LOGOS_ASSERT_EQ(MockWalletFfiCapture::lastCreateStatisticsPath, std::string("/statistics.json"));
     // Second attempt: already open.
     LOGOS_ASSERT_EQ(module.create_new("/cfg", "/store", "pw"), "");
 }
@@ -710,6 +711,7 @@ LOGOS_TEST(open_success) {
 
     LOGOS_ASSERT_EQ(module.open("/cfg", "/store"), static_cast<int64_t>(SUCCESS));
     LOGOS_ASSERT(t.cFunctionCalled("wallet_ffi_open"));
+    LOGOS_ASSERT_EQ(MockWalletFfiCapture::lastOpenStatisticsPath, std::string("/statistics.json"));
 }
 
 LOGOS_TEST(save_forwards_return_code) {

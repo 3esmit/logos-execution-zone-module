@@ -7,6 +7,7 @@
 
 #include <array>
 #include <cstdint>
+#include <string>
 #include <vector>
 
 namespace MockWalletFfiCapture {
@@ -17,6 +18,8 @@ extern std::vector<uint32_t> lastGenericPublicInstructionWords;
 extern std::array<uint8_t, 32> lastGenericPublicProgramId;
 extern std::vector<std::array<uint8_t, 32>> lastGenericPublicAccountIds;
 extern std::vector<int> lastGenericPublicAccountKinds;
+extern std::string lastCreateStatisticsPath;
+extern std::string lastOpenStatisticsPath;
 
 } // namespace MockWalletFfiCapture
 
