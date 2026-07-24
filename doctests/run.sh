@@ -26,13 +26,13 @@ read -r -a DOCTEST <<< "${DOCTEST:-nix run github:logos-co/logos-doctest --}"
 OUTPUT_DIR="./outputs"
 
 # Build the doc-test against THIS repo's current commit rather than the latest
-# published flake. The spec pins `github:logos-blockchain/logos-execution-zone-module{release}`
+# published flake. The spec pins `github:3esmit/logos-execution-zone-module{release}`
 # to $COMMIT via --release-for, so it packages exactly what is checked out here.
 # Override by exporting COMMIT (e.g. a tag), or set COMMIT="" to fall back to
 # latest master.
 #
 # Note: nix fetches the commit from the GitHub remote, so $COMMIT must be pushed
-# to logos-blockchain/logos-execution-zone-module. A local-only / uncommitted HEAD
+# to 3esmit/logos-execution-zone-module. A local-only / uncommitted HEAD
 # won't resolve; export COMMIT="" (or push first) in that case.
 #
 # This is a private repo, so nix must be able to authenticate to GitHub. If the
