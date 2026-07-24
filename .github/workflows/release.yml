@@ -32,7 +32,7 @@ jobs:
     needs: preflight
     permissions:
       contents: write
-    uses: 3esmit/logos-modules-release-action/.github/workflows/release.yml@81f506530c56e8757e6d99ee7f9d4c092e74411c
+    uses: 3esmit/logos-modules-release-action/.github/workflows/release.yml@049097bc9956c681905cde8a397991cf2b51c20b
     with:
       module_path: .
       metadata_path: metadata.json
@@ -42,5 +42,6 @@ jobs:
       dispatch_rebuild_index: false
       prerelease: true
       install_macos_metal_toolchain: true
+      reclaim_linux_disk_space: true
       signing_mode: none
       skip_if_published: ${{ !inputs.force_build }}

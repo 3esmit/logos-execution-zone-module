@@ -7,7 +7,7 @@ cd "$repo_root"
 
 workflow=".github/workflows/release.yml"
 action_workflow="3esmit/logos-modules-release-action/.github/workflows/release.yml"
-action_ref="${action_workflow}@81f506530c56e8757e6d99ee7f9d4c092e74411c"
+action_ref="${action_workflow}@049097bc9956c681905cde8a397991cf2b51c20b"
 
 assert_workflow_line() {
   local expected="$1"
@@ -33,6 +33,7 @@ assert_workflow_line "      require_all_variants: true"
 assert_workflow_line "      dispatch_rebuild_index: false"
 assert_workflow_line "      prerelease: true"
 assert_workflow_line "      install_macos_metal_toolchain: true"
+assert_workflow_line "      reclaim_linux_disk_space: true"
 assert_workflow_line "      signing_mode: none"
 
 test "$(grep -Fc "uses: ${action_workflow}@" "$workflow")" -eq 1
