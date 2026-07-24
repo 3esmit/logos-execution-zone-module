@@ -33,6 +33,9 @@ jobs:
           tar -xzf actionlint.tar.gz actionlint
           ./actionlint -color .github/workflows/ci.yml .github/workflows/release.yml
 
+      - name: Validate source release contract
+        run: bash scripts/test-source-release-workflow.sh
+
   build-and-test:
     name: Build and test (${{ matrix.platform }})
     runs-on: ${{ matrix.runner }}
