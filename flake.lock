@@ -2716,17 +2716,17 @@
         "rust-rapidsnark": "rust-rapidsnark"
       },
       "locked": {
-        "lastModified": 1782922431,
-        "narHash": "sha256-loCudmjk5qD12UqgiS7lyUc2UpTDzNpH1y0e8qojkNs=",
+        "lastModified": 1785414238,
+        "narHash": "sha256-SNo5ZvmzB39HMgY+f0a93XoNA92e/T5Ki9Gho62COWY=",
         "owner": "logos-blockchain",
         "repo": "logos-execution-zone",
-        "rev": "571f35b3849c889f893109fd2b9dad040f0a3b57",
+        "rev": "f58cde1a2251c20cf418a561ad974a8c64ab2393",
         "type": "github"
       },
       "original": {
         "owner": "logos-blockchain",
         "repo": "logos-execution-zone",
-        "rev": "571f35b3849c889f893109fd2b9dad040f0a3b57",
+        "rev": "f58cde1a2251c20cf418a561ad974a8c64ab2393",
         "type": "github"
       }
     },
