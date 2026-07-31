@@ -212,28 +212,31 @@ bool jsonToFfiPrivateAccountKeys(const std::string& json, FfiPrivateAccountKeys*
     if (doc.is_discarded() || !doc.is_object())
         return false;
 
-    if (doc.contains(JsonKeys::NullifierPublicKey) && doc[JsonKeys::NullifierPublicKey].is_string()) {
-        if (!hexToBytes32(doc[JsonKeys::NullifierPublicKey].get<std::string>(), &output_keys->nullifier_public_key))
-            return false;
-    }
+    // Nullifier public key is mandatory: a missing/wrong-typed value must not fall back to zero.
+    if (!doc.contains(JsonKeys::NullifierPublicKey) || !doc[JsonKeys::NullifierPublicKey].is_string())
+        return false;
+    if (!hexToBytes32(doc[JsonKeys::NullifierPublicKey].get<std::string>(), &output_keys->nullifier_public_key))
+        return false;
 
-    if (doc.contains(JsonKeys::ViewingPublicKey) && doc[JsonKeys::ViewingPublicKey].is_string()) {
+    output_keys->viewing_public_key = nullptr;
+    output_keys->viewing_public_key_len = 0;
+
+    if (doc.contains(JsonKeys::ViewingPublicKey)) {
+        if (!doc[JsonKeys::ViewingPublicKey].is_string())
+            return false;
+
         std::vector<uint8_t> buffer;
         if (!hexToBytes(doc[JsonKeys::ViewingPublicKey].get<std::string>(), buffer))
             return false;
 
-        if (buffer.empty()) {
-            output_keys->viewing_public_key = nullptr;
-            output_keys->viewing_public_key_len = 0;
-        } else {
+        if (!buffer.empty()) {
             auto* data = static_cast<uint8_t*>(malloc(buffer.size()));
+            if (!data)
+                return false;
             memcpy(data, buffer.data(), buffer.size());
             output_keys->viewing_public_key = data;
             output_keys->viewing_public_key_len = buffer.size();
         }
-    } else {
-        output_keys->viewing_public_key = nullptr;
-        output_keys->viewing_public_key_len = 0;
     }
 
     return true;

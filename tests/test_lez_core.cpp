@@ -288,6 +288,68 @@ LOGOS_TEST(transfer_shielded_invalid_keys_json_error) {
     LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_transfer_shielded"));
 }
 
+// A missing nullifier_public_key must not succeed with a zero key.
+LOGOS_TEST(transfer_shielded_missing_nullifier_key_error) {
+    auto t = LogosTestContext("logos_execution_zone");
+    LEZCoreModule module;
+
+    const nlohmann::json obj = parseObject(module.transfer_shielded(VALID_ID, "{}", VALID_U128));
+    LOGOS_ASSERT_FALSE(obj["success"].get<bool>());
+    LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_transfer_shielded"));
+}
+
+LOGOS_TEST(transfer_shielded_misspelled_nullifier_key_error) {
+    auto t = LogosTestContext("logos_execution_zone");
+    LEZCoreModule module;
+
+    const std::string keysJson = std::string("{\"nullifierPublicKey\":\"") + std::string(64, 'a') + "\"}";
+    const nlohmann::json obj = parseObject(module.transfer_shielded(VALID_ID, keysJson, VALID_U128));
+    LOGOS_ASSERT_FALSE(obj["success"].get<bool>());
+    LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_transfer_shielded"));
+}
+
+LOGOS_TEST(transfer_shielded_abbreviated_nullifier_key_error) {
+    auto t = LogosTestContext("logos_execution_zone");
+    LEZCoreModule module;
+
+    const std::string keysJson = std::string("{\"nullifier_pubkey\":\"") + std::string(64, 'a') + "\"}";
+    const nlohmann::json obj = parseObject(module.transfer_shielded(VALID_ID, keysJson, VALID_U128));
+    LOGOS_ASSERT_FALSE(obj["success"].get<bool>());
+    LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_transfer_shielded"));
+}
+
+LOGOS_TEST(transfer_shielded_nullifier_key_omitted_viewing_key_only_error) {
+    auto t = LogosTestContext("logos_execution_zone");
+    LEZCoreModule module;
+
+    const std::string keysJson = std::string("{\"viewing_public_key\":\"") + std::string(64, 'a') + "\"}";
+    const nlohmann::json obj = parseObject(module.transfer_shielded(VALID_ID, keysJson, VALID_U128));
+    LOGOS_ASSERT_FALSE(obj["success"].get<bool>());
+    LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_transfer_shielded"));
+}
+
+LOGOS_TEST(transfer_shielded_nullifier_key_wrong_type_error) {
+    auto t = LogosTestContext("logos_execution_zone");
+    LEZCoreModule module;
+
+    const std::string keysJson = "{\"nullifier_public_key\": 12345}";
+    const nlohmann::json obj = parseObject(module.transfer_shielded(VALID_ID, keysJson, VALID_U128));
+    LOGOS_ASSERT_FALSE(obj["success"].get<bool>());
+    LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_transfer_shielded"));
+}
+
+// A non-string viewing_public_key must be rejected, not treated as absent.
+LOGOS_TEST(transfer_shielded_viewing_key_wrong_type_error) {
+    auto t = LogosTestContext("logos_execution_zone");
+    LEZCoreModule module;
+
+    const std::string keysJson = std::string("{\"nullifier_public_key\":\"") + std::string(64, 'a')
+        + "\",\"viewing_public_key\": 12345}";
+    const nlohmann::json obj = parseObject(module.transfer_shielded(VALID_ID, keysJson, VALID_U128));
+    LOGOS_ASSERT_FALSE(obj["success"].get<bool>());
+    LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_transfer_shielded"));
+}
+
 LOGOS_TEST(transfer_shielded_success_json) {
     auto t = LogosTestContext("logos_execution_zone");
     LEZCoreModule module;
@@ -333,6 +395,16 @@ LOGOS_TEST(transfer_shielded_without_identifier_uses_random_nonzero_identifier) 
     uint8_t zero[16] = {0};
     LOGOS_ASSERT_FALSE(memcmp(first, zero, sizeof(first)) == 0);
     LOGOS_ASSERT_FALSE(memcmp(first, second, sizeof(first)) == 0);
+}
+
+// transfer_private shares the same parser, so it must reject a missing key too.
+LOGOS_TEST(transfer_private_missing_nullifier_key_error) {
+    auto t = LogosTestContext("logos_execution_zone");
+    LEZCoreModule module;
+
+    const nlohmann::json obj = parseObject(module.transfer_private(VALID_ID, "{}", VALID_U128));
+    LOGOS_ASSERT_FALSE(obj["success"].get<bool>());
+    LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_transfer_private"));
 }
 
 // transfer_private mirrors transfer_shielded's identifier handling exactly (see above).
