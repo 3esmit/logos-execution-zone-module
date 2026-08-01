@@ -220,12 +220,12 @@ LOGOS_TEST(get_last_synced_block_returns_value) {
     LOGOS_ASSERT_EQ(module.get_last_synced_block(), static_cast<int64_t>(55));
 }
 
-LOGOS_TEST(get_last_synced_block_error_returns_zero) {
+LOGOS_TEST(get_last_synced_block_error_returns_negative_sentinel) {
     auto t = LogosTestContext("logos_execution_zone");
     t.mockCFunction("wallet_ffi_get_last_synced_block").returns(static_cast<int>(INTERNAL_ERROR));
     LEZCoreModule module;
 
-    LOGOS_ASSERT_EQ(module.get_last_synced_block(), static_cast<int64_t>(0));
+    LOGOS_ASSERT_EQ(module.get_last_synced_block(), static_cast<int64_t>(-1));
 }
 
 LOGOS_TEST(get_current_block_height_returns_value) {
@@ -234,6 +234,14 @@ LOGOS_TEST(get_current_block_height_returns_value) {
     LEZCoreModule module;
 
     LOGOS_ASSERT_EQ(module.get_current_block_height(), static_cast<int64_t>(999));
+}
+
+LOGOS_TEST(get_current_block_height_error_returns_negative_sentinel) {
+    auto t = LogosTestContext("logos_execution_zone");
+    t.mockCFunction("wallet_ffi_get_current_block_height").returns(static_cast<int>(INTERNAL_ERROR));
+    LEZCoreModule module;
+
+    LOGOS_ASSERT_EQ(module.get_current_block_height(), static_cast<int64_t>(-1));
 }
 
 // ============================================================================
