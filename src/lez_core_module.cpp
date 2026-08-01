@@ -70,12 +70,27 @@ constexpr auto Secrets = "secrets";
 constexpr std::string_view LezTestnetSequencerAddress = "https://testnet.lez.logos.co";
 constexpr std::string_view LezTestnetAuthenticatedTransferProgramId =
     "dcbbfebcd59399961ed9973b8307dc475fd4c5ca5779aacfe7588f7dbc3f4a71";
+constexpr std::string_view LezLocalDevelopmentSequencerAddress =
+    "http://127.0.0.1:3040";
 
 bool isLezTestnetSequencer(std::string address) {
     while (!address.empty() && address.back() == '/') {
         address.pop_back();
     }
     return address == LezTestnetSequencerAddress;
+}
+
+bool isLezLocalDevelopmentSequencer(std::string address) {
+    while (!address.empty() && address.back() == '/') {
+        address.pop_back();
+    }
+    return address == LezLocalDevelopmentSequencerAddress;
+}
+
+std::string programIdToHex(const FfiProgramId& programId) {
+    return bytesToHex(
+        reinterpret_cast<const uint8_t*>(programId.data),
+        sizeof(programId.data));
 }
 
 std::vector<uint32_t> authenticatedTransferWords(const uint8_t (&amount)[16]) {
@@ -902,6 +917,28 @@ std::string LEZCoreModule::register_public_account(const std::string& account_id
             {true},
             {1},
             std::string(LezTestnetAuthenticatedTransferProgramId)
+        );
+    }
+
+    if (isLezLocalDevelopmentSequencer(get_sequencer_addr())) {
+        FfiProgramId programId{};
+        const WalletFfiError error =
+            wallet_ffi_authenticated_transfer_program_id(&programId);
+        if (error != SUCCESS) {
+            fprintf(stderr,
+                    "register_public_account: local program id FFI error %d\n",
+                    error);
+            return transferResultToJson(
+                nullptr,
+                "register_public_account: local program id FFI error "
+                    + std::to_string(error));
+        }
+        // AuthenticatedTransferInstruction::Initialize is enum variant 1.
+        return send_generic_public_transaction(
+            {account_id_hex},
+            {true},
+            {1},
+            programIdToHex(programId)
         );
     }
 

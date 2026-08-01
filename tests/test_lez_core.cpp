@@ -491,6 +491,29 @@ LOGOS_TEST(register_public_account_uses_convenience_path_outside_testnet) {
     LOGOS_ASSERT_TRUE(obj["success"].get<bool>());
 }
 
+LOGOS_TEST(register_public_account_uses_local_development_program) {
+    auto t = LogosTestContext("logos_execution_zone");
+    t.mockCFunction("wallet_ffi_get_sequencer_addr")
+        .returns("http://127.0.0.1:3040");
+    LEZCoreModule module;
+
+    const nlohmann::json obj = parseObject(module.register_public_account(VALID_ID));
+
+    LOGOS_ASSERT(t.cFunctionCalled("wallet_ffi_authenticated_transfer_program_id"));
+    LOGOS_ASSERT(t.cFunctionCalled("wallet_ffi_send_generic_public_transaction"));
+    LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_register_public_account"));
+    LOGOS_ASSERT_TRUE(obj["success"].get<bool>());
+    LOGOS_ASSERT_EQ(MockWalletFfiCapture::lastGenericPublicInstructionWords.size(), static_cast<size_t>(1));
+    LOGOS_ASSERT_EQ(MockWalletFfiCapture::lastGenericPublicInstructionWords[0], static_cast<uint32_t>(1));
+    const std::array<uint8_t, 32> expected_program_id = {
+        0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+        0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+        0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+        0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42, 0x42,
+    };
+    LOGOS_ASSERT(MockWalletFfiCapture::lastGenericPublicProgramId == expected_program_id);
+}
+
 LOGOS_TEST(register_public_account_uses_deployed_testnet_program) {
     auto t = LogosTestContext("logos_execution_zone");
     t.mockCFunction("wallet_ffi_get_sequencer_addr").returns("https://testnet.lez.logos.co");
