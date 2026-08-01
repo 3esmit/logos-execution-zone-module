@@ -483,7 +483,7 @@ int64_t LEZCoreModule::get_last_synced_block() {
     const WalletFfiError error = wallet_ffi_get_last_synced_block(walletHandle, &block_id);
     if (error != SUCCESS) {
         fprintf(stderr, "get_last_synced_block: wallet FFI error %d\n", error);
-        return 0;
+        return -1;
     }
     return static_cast<int64_t>(block_id);
 }
@@ -493,7 +493,7 @@ int64_t LEZCoreModule::get_current_block_height() {
     const WalletFfiError error = wallet_ffi_get_current_block_height(walletHandle, &block_height);
     if (error != SUCCESS) {
         fprintf(stderr, "get_current_block_height: wallet FFI error %d\n", error);
-        return 0;
+        return -1;
     }
     return static_cast<int64_t>(block_height);
 }
