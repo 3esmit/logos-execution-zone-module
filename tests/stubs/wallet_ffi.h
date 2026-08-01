@@ -32,6 +32,12 @@ typedef struct FfiBytes32 {
     uint8_t data[32];
 } FfiBytes32;
 
+typedef struct FfiLocalBlockHeaderReceiptV1 {
+    uint64_t block_id;
+    FfiBytes32 block_hash;
+    FfiBytes32 previous_block_hash;
+} FfiLocalBlockHeaderReceiptV1;
+
 // Program ID - 8 u32 values (32 bytes total).
 typedef struct FfiProgramId {
     uint32_t data[8];
@@ -231,6 +237,7 @@ void wallet_ffi_free_string(char* s);
 int wallet_ffi_sync_to_block(WalletHandle* handle, uint64_t block_id);
 WalletFfiError wallet_ffi_get_last_synced_block(WalletHandle* handle, uint64_t* out_block_id);
 WalletFfiError wallet_ffi_get_current_block_height(WalletHandle* handle, uint64_t* out_block_height);
+WalletFfiError wallet_ffi_get_local_public_block_history(WalletHandle* handle, uint64_t start_block_id, const FfiLocalBlockHeaderReceiptV1* expected_tip, char** out_history_json);
 
 // === Pinata claiming ===
 

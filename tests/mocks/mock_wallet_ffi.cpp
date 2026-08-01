@@ -16,6 +16,7 @@ extern "C" {
 
 #include "mock_wallet_ffi_capture.h"
 
+#include <algorithm>
 #include <cstdlib>
 #include <cstring>
 
@@ -28,6 +29,11 @@ std::vector<std::array<uint8_t, 32>> lastGenericPublicAccountIds;
 std::vector<int> lastGenericPublicAccountKinds;
 std::string lastCreateStatisticsPath;
 std::string lastOpenStatisticsPath;
+uint64_t lastLocalHistoryStartBlockId = 0U;
+bool lastLocalHistoryHasExpectedTip = false;
+uint64_t lastLocalHistoryExpectedTipBlockId = 0U;
+std::array<uint8_t, 32> lastLocalHistoryBlockHash{};
+std::array<uint8_t, 32> lastLocalHistoryPreviousBlockHash{};
 } // namespace MockWalletFfiCapture
 
 namespace {
@@ -323,6 +329,47 @@ WalletFfiError wallet_ffi_get_current_block_height(WalletHandle*, uint64_t* out_
     const int err = LOGOS_CMOCK_RETURN(int, "wallet_ffi_get_current_block_height");
     if (err == 0 && out_block_height) {
         *out_block_height = static_cast<uint64_t>(LOGOS_CMOCK_RETURN(int, "current_block_height_value"));
+    }
+    return static_cast<WalletFfiError>(err);
+}
+
+WalletFfiError wallet_ffi_get_local_public_block_history(
+    WalletHandle*,
+    const uint64_t start_block_id,
+    const FfiLocalBlockHeaderReceiptV1* expected_tip,
+    char** out_history_json)
+{
+    LOGOS_CMOCK_RECORD("wallet_ffi_get_local_public_block_history");
+    MockWalletFfiCapture::lastLocalHistoryStartBlockId = start_block_id;
+    MockWalletFfiCapture::lastLocalHistoryHasExpectedTip =
+        expected_tip != nullptr;
+    MockWalletFfiCapture::lastLocalHistoryExpectedTipBlockId = 0U;
+    MockWalletFfiCapture::lastLocalHistoryBlockHash.fill(0U);
+    MockWalletFfiCapture::lastLocalHistoryPreviousBlockHash.fill(0U);
+    if (expected_tip != nullptr) {
+        MockWalletFfiCapture::lastLocalHistoryExpectedTipBlockId =
+            expected_tip->block_id;
+        std::copy_n(
+            expected_tip->block_hash.data,
+            32U,
+            MockWalletFfiCapture::lastLocalHistoryBlockHash.begin());
+        std::copy_n(
+            expected_tip->previous_block_hash.data,
+            32U,
+            MockWalletFfiCapture::lastLocalHistoryPreviousBlockHash.begin());
+    }
+
+    const int err = LOGOS_CMOCK_RETURN(
+        int,
+        "wallet_ffi_get_local_public_block_history");
+    if (out_history_json != nullptr) {
+        const char* result = LOGOS_CMOCK_RETURN_STRING(
+            "local_public_block_history_json");
+        *out_history_json = err == 0
+            ? strdup((result != nullptr && *result != '\0')
+                         ? result
+                         : "{\"snapshot_tip\":{},\"blocks\":[],\"next_block_id\":null}")
+            : nullptr;
     }
     return static_cast<WalletFfiError>(err);
 }

@@ -20,6 +20,11 @@ extern std::vector<std::array<uint8_t, 32>> lastGenericPublicAccountIds;
 extern std::vector<int> lastGenericPublicAccountKinds;
 extern std::string lastCreateStatisticsPath;
 extern std::string lastOpenStatisticsPath;
+extern uint64_t lastLocalHistoryStartBlockId;
+extern bool lastLocalHistoryHasExpectedTip;
+extern uint64_t lastLocalHistoryExpectedTipBlockId;
+extern std::array<uint8_t, 32> lastLocalHistoryBlockHash;
+extern std::array<uint8_t, 32> lastLocalHistoryPreviousBlockHash;
 
 } // namespace MockWalletFfiCapture
 
