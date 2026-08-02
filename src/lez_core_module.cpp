@@ -912,7 +912,8 @@ std::string LEZCoreModule::register_public_account(const std::string& account_id
         return transferResultToJson(nullptr, "register_public_account: invalid account_id_hex");
     }
 
-    if (isLezTestnetSequencer(get_sequencer_addr())) {
+    const std::string sequencerAddress = get_sequencer_addr();
+    if (isLezTestnetSequencer(sequencerAddress)) {
         // AuthenticatedTransferInstruction::Initialize is enum variant 1.
         return send_generic_public_transaction(
             {account_id_hex},
@@ -922,7 +923,7 @@ std::string LEZCoreModule::register_public_account(const std::string& account_id
         );
     }
 
-    if (isLezLocalDevelopmentSequencer(get_sequencer_addr())) {
+    if (isLezLocalDevelopmentSequencer(sequencerAddress)) {
         FfiProgramId programId{};
         const WalletFfiError error =
             wallet_ffi_authenticated_transfer_program_id(&programId);

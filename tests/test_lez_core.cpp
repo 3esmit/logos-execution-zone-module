@@ -498,6 +498,7 @@ LOGOS_TEST(register_public_account_uses_local_development_program) {
 
     const nlohmann::json obj = parseObject(module.register_public_account(VALID_ID));
 
+    LOGOS_ASSERT_EQ(t.cFunctionCallCount("wallet_ffi_get_sequencer_addr"), 1);
     LOGOS_ASSERT(t.cFunctionCalled("wallet_ffi_authenticated_transfer_program_id"));
     LOGOS_ASSERT(t.cFunctionCalled("wallet_ffi_send_generic_public_transaction"));
     LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_register_public_account"));
