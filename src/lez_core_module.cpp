@@ -1130,15 +1130,21 @@ std::string LEZCoreModule::send_generic_public_transaction(
 ) {
     if (account_ids.empty()) {
         fprintf(stderr, "send_generic_public_transaction: account_ids must not be empty\n");
-        return transferResultToJson(nullptr, "send_generic_public_transaction: account_ids must not be empty");
+        return genericTransactionResultToJson(
+            nullptr,
+            "send_generic_public_transaction: account_ids must not be empty");
     }
     if (account_ids.size() != signing_requirements.size()) {
         fprintf(stderr, "send_generic_public_transaction: account_ids and signing_requirements must have the same size\n");
-        return transferResultToJson(nullptr, "send_generic_public_transaction: account_ids and signing_requirements must have the same size");
+        return genericTransactionResultToJson(
+            nullptr,
+            "send_generic_public_transaction: account_ids and signing_requirements must have the same size");
     }
     if (instruction.empty()) {
         fprintf(stderr, "send_generic_public_transaction: instruction must not be empty\n");
-        return transferResultToJson(nullptr, "send_generic_public_transaction: instruction must not be empty");
+        return genericTransactionResultToJson(
+            nullptr,
+            "send_generic_public_transaction: instruction must not be empty");
     }
 
     std::vector<FfiAccountIdentity> identities_resolved;
@@ -1150,13 +1156,18 @@ std::string LEZCoreModule::send_generic_public_transaction(
         FfiBytes32 id{};
         if (!hexToBytes32(account_ids[i], &id)) {
             fprintf(stderr, "wallet_ffi_resolve_public_account: invalid account_id_hex");
-            return transferResultToJson(nullptr, std::string("wallet_ffi_resolve_public_account: invalid account_id_hex"));
+            return genericTransactionResultToJson(
+                nullptr,
+                std::string("wallet_ffi_resolve_public_account: invalid account_id_hex"));
         }
 
         WalletFfiError error = wallet_ffi_resolve_public_account(id, signing_requirements[i], &acc_identity);
         if (error != SUCCESS) {
             fprintf(stderr, "wallet_ffi_resolve_public_account failed for index %zu: wallet FFI error %d\n", i, error);
-            return transferResultToJson(nullptr, std::string("wallet_ffi_resolve_public_account: wallet FFI error ") + std::to_string(error));
+            return genericTransactionResultToJson(
+                nullptr,
+                std::string("wallet_ffi_resolve_public_account: wallet FFI error ")
+                    + std::to_string(error));
         }
         identities_resolved.push_back(acc_identity);
     }
@@ -1170,7 +1181,9 @@ std::string LEZCoreModule::send_generic_public_transaction(
     std::vector<uint8_t> program_id_bytes;
     if (!hexToBytes(program_id_hex, program_id_bytes, 32)) {
         fprintf(stderr, "send_generic_public_transaction: invalid program_id_hex");
-        return transferResultToJson(nullptr, std::string("send_generic_public_transaction: invalid program_id_hex"));
+        return genericTransactionResultToJson(
+            nullptr,
+            std::string("send_generic_public_transaction: invalid program_id_hex"));
     }
     FfiProgramId program_id{};
     memcpy(program_id.data, program_id_bytes.data(), 32);
@@ -1193,7 +1206,10 @@ std::string LEZCoreModule::send_generic_public_transaction(
 
     if (error != SUCCESS) {
         fprintf(stderr, "send_generic_public_transaction: wallet FFI error %d\n", error);
-        return transferResultToJson(nullptr, std::string("send_generic_public_transaction: wallet FFI error ") + std::to_string(error));
+        return genericTransactionResultToJson(
+            nullptr,
+            std::string("send_generic_public_transaction: wallet FFI error ")
+                + std::to_string(error));
     }
     std::string resultJson = genericTransactionResultToJson(&result, std::string());
     wallet_ffi_free_transaction_result(&result);

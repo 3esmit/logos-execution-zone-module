@@ -533,25 +533,52 @@ LOGOS_TEST(generic_public_transaction_rejects_malformed_vectors) {
     auto t = LogosTestContext("logos_execution_zone");
     LEZCoreModule module;
 
+    const auto assertGenericRejection = [](const nlohmann::json& result) {
+        LOGOS_ASSERT_FALSE(result["success"].get<bool>());
+        LOGOS_ASSERT_TRUE(result.contains("secrets"));
+        LOGOS_ASSERT_TRUE(result["secrets"].is_array());
+        LOGOS_ASSERT_EQ(result["secrets"].size(), static_cast<size_t>(0));
+        LOGOS_ASSERT_EQ(result.size(), static_cast<size_t>(4));
+    };
+
     const nlohmann::json mismatched = parseObject(module.send_generic_public_transaction(
         {VALID_ID}, {}, {0}, std::string(64, 'c')
     ));
-    LOGOS_ASSERT_FALSE(mismatched["success"].get<bool>());
+    assertGenericRejection(mismatched);
     LOGOS_ASSERT_CONTAINS(mismatched["error"].get<std::string>(), std::string("same size"));
     LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_send_generic_public_transaction"));
 
     const nlohmann::json empty_accounts = parseObject(module.send_generic_public_transaction(
         {}, {}, {0}, std::string(64, 'c')
     ));
-    LOGOS_ASSERT_FALSE(empty_accounts["success"].get<bool>());
+    assertGenericRejection(empty_accounts);
     LOGOS_ASSERT_CONTAINS(empty_accounts["error"].get<std::string>(), std::string("account_ids"));
 
     const nlohmann::json empty_instruction = parseObject(module.send_generic_public_transaction(
         {VALID_ID}, {true}, {}, std::string(64, 'c')
     ));
-    LOGOS_ASSERT_FALSE(empty_instruction["success"].get<bool>());
+    assertGenericRejection(empty_instruction);
     LOGOS_ASSERT_CONTAINS(empty_instruction["error"].get<std::string>(), std::string("instruction"));
     LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_send_generic_public_transaction"));
+}
+
+LOGOS_TEST(generic_public_transaction_ffi_error_preserves_envelope) {
+    auto t = LogosTestContext("logos_execution_zone");
+    t.mockCFunction("wallet_ffi_send_generic_public_transaction")
+        .returns(static_cast<int>(INTERNAL_ERROR));
+    LEZCoreModule module;
+
+    const nlohmann::json result = parseObject(module.send_generic_public_transaction(
+        {VALID_ID}, {true}, {1}, std::string(64, 'c')
+    ));
+
+    LOGOS_ASSERT(t.cFunctionCalled("wallet_ffi_send_generic_public_transaction"));
+    LOGOS_ASSERT_FALSE(result["success"].get<bool>());
+    LOGOS_ASSERT_TRUE(result.contains("secrets"));
+    LOGOS_ASSERT_TRUE(result["secrets"].is_array());
+    LOGOS_ASSERT_EQ(result["secrets"].size(), static_cast<size_t>(0));
+    LOGOS_ASSERT_EQ(result.size(), static_cast<size_t>(4));
+    LOGOS_ASSERT_CONTAINS(result["error"].get<std::string>(), std::string("wallet FFI error"));
 }
 
 LOGOS_TEST(register_private_account_success_json) {
