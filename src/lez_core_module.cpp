@@ -73,17 +73,19 @@ constexpr std::string_view LezTestnetAuthenticatedTransferProgramId =
 constexpr std::string_view LezLocalDevelopmentSequencerAddress =
     "http://127.0.0.1:3040";
 
-bool isLezTestnetSequencer(std::string address) {
+void normalizeSequencerAddress(std::string& address) {
     while (!address.empty() && address.back() == '/') {
         address.pop_back();
     }
+}
+
+bool isLezTestnetSequencer(std::string address) {
+    normalizeSequencerAddress(address);
     return address == LezTestnetSequencerAddress;
 }
 
 bool isLezLocalDevelopmentSequencer(std::string address) {
-    while (!address.empty() && address.back() == '/') {
-        address.pop_back();
-    }
+    normalizeSequencerAddress(address);
     return address == LezLocalDevelopmentSequencerAddress;
 }
 

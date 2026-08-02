@@ -493,8 +493,7 @@ LOGOS_TEST(register_public_account_uses_convenience_path_outside_testnet) {
 
 LOGOS_TEST(register_public_account_uses_local_development_program) {
     auto t = LogosTestContext("logos_execution_zone");
-    t.mockCFunction("wallet_ffi_get_sequencer_addr")
-        .returns("http://127.0.0.1:3040");
+    t.mockCFunction("wallet_ffi_get_sequencer_addr").returns("http://127.0.0.1:3040/");
     LEZCoreModule module;
 
     const nlohmann::json obj = parseObject(module.register_public_account(VALID_ID));
