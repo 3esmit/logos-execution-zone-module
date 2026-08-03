@@ -54,7 +54,7 @@ extern "C" {
 
 // === Lifecycle ===
 
-FfiCreateWalletOutput wallet_ffi_create_new(const char*, const char*, const char*) {
+FfiCreateWalletOutput wallet_ffi_create_new(const char*, const char*, const char*, const char*) {
     LOGOS_CMOCK_RECORD("wallet_ffi_create_new");
     const int ok = LOGOS_CMOCK_RETURN(int, "wallet_ffi_create_new");
     const char* mnemonic_ok = LOGOS_CMOCK_RETURN_STRING("wallet_ffi_create_new");
@@ -65,7 +65,7 @@ FfiCreateWalletOutput wallet_ffi_create_new(const char*, const char*, const char
     return output;
 }
 
-WalletHandle* wallet_ffi_open(const char*, const char*) {
+WalletHandle* wallet_ffi_open(const char*, const char*, const char*) {
     LOGOS_CMOCK_RECORD("wallet_ffi_open");
     const int ok = LOGOS_CMOCK_RETURN(int, "wallet_ffi_open");
     return ok ? reinterpret_cast<WalletHandle*>(&g_fakeWallet) : nullptr;

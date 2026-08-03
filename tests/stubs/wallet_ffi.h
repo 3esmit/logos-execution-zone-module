@@ -191,8 +191,8 @@ typedef struct LabelList {
 
 // === Lifecycle ===
 
-FfiCreateWalletOutput wallet_ffi_create_new(const char* config_path, const char* storage_path, const char* password);
-WalletHandle* wallet_ffi_open(const char* config_path, const char* storage_path);
+FfiCreateWalletOutput wallet_ffi_create_new(const char* config_path, const char* storage_path, const char* statistics_path, const char* password);
+WalletHandle* wallet_ffi_open(const char* config_path, const char* storage_path, const char* statistics_path);
 int wallet_ffi_save(WalletHandle* handle);
 void wallet_ffi_destroy(WalletHandle* handle);
 
