@@ -450,13 +450,9 @@ WalletFfiError wallet_ffi_register_public_account(WalletHandle*, const FfiBytes3
     return fillTransferResult("wallet_ffi_register_public_account", out_result);
 }
 
-WalletFfiError wallet_ffi_authenticated_transfer_program_id(FfiProgramId* out_program_id) {
-    LOGOS_CMOCK_RECORD("wallet_ffi_authenticated_transfer_program_id");
-    const int err = LOGOS_CMOCK_RETURN(int, "wallet_ffi_authenticated_transfer_program_id");
-    if (err == 0 && out_program_id) {
-        memset(out_program_id->data, 0x42, sizeof(out_program_id->data));
-    }
-    return static_cast<WalletFfiError>(err);
+WalletFfiError wallet_ffi_register_public_account_local(WalletHandle*, const FfiBytes32*, FfiTransferResult* out_result) {
+    LOGOS_CMOCK_RECORD("wallet_ffi_register_public_account_local");
+    return fillTransferResult("wallet_ffi_register_public_account_local", out_result);
 }
 
 WalletFfiError wallet_ffi_register_private_account(WalletHandle*, const FfiBytes32*, FfiTransferResult* out_result) {

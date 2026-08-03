@@ -89,12 +89,6 @@ bool isLezLocalDevelopmentSequencer(std::string address) {
     return address == LezLocalDevelopmentSequencerAddress;
 }
 
-std::string programIdToHex(const FfiProgramId& programId) {
-    return bytesToHex(
-        reinterpret_cast<const uint8_t*>(programId.data),
-        sizeof(programId.data));
-}
-
 std::vector<uint32_t> authenticatedTransferWords(const uint8_t (&amount)[16]) {
     std::vector<uint32_t> words;
     words.reserve(5);
@@ -924,25 +918,23 @@ std::string LEZCoreModule::register_public_account(const std::string& account_id
     }
 
     if (isLezLocalDevelopmentSequencer(sequencerAddress)) {
-        FfiProgramId programId{};
-        const WalletFfiError error =
-            wallet_ffi_authenticated_transfer_program_id(&programId);
+        FfiTransferResult result{};
+        const WalletFfiError error = wallet_ffi_register_public_account_local(
+            walletHandle,
+            &id,
+            &result);
         if (error != SUCCESS) {
             fprintf(stderr,
-                    "register_public_account: local program id FFI error %d\n",
+                    "register_public_account: local wallet FFI error %d\n",
                     error);
             return transferResultToJson(
                 nullptr,
-                "register_public_account: local program id FFI error "
+                "register_public_account: local wallet FFI error "
                     + std::to_string(error));
         }
-        // AuthenticatedTransferInstruction::Initialize is enum variant 1.
-        return send_generic_public_transaction(
-            {account_id_hex},
-            {true},
-            {1},
-            programIdToHex(programId)
-        );
+        std::string resultJson = transferResultToJson(&result, std::string());
+        wallet_ffi_free_transfer_result(&result);
+        return resultJson;
     }
 
     FfiTransferResult result{};

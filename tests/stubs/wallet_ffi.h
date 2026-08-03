@@ -293,8 +293,8 @@ WalletFfiError wallet_ffi_transfer_private_owned(
     const uint8_t (*amount)[16], FfiTransferResult* out_result);
 
 WalletFfiError wallet_ffi_register_public_account(WalletHandle* handle, const FfiBytes32* account_id, FfiTransferResult* out_result);
+WalletFfiError wallet_ffi_register_public_account_local(WalletHandle* handle, const FfiBytes32* account_id, FfiTransferResult* out_result);
 WalletFfiError wallet_ffi_register_private_account(WalletHandle* handle, const FfiBytes32* account_id, FfiTransferResult* out_result);
-WalletFfiError wallet_ffi_authenticated_transfer_program_id(FfiProgramId* out_program_id);
 
 WalletFfiError wallet_ffi_transfer_elf(FfiProgram *ffi_program);
 WalletFfiError wallet_ffi_token_elf(FfiProgram *ffi_program);
