@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0-alpha.3] - Alpha
+
+### Added
+
+- Expose bounded local public-block history and preserve the maintained
+  registration and transaction-envelope behavior needed by Logos Palace.
+
 ## [0.4.0-alpha.2] - Alpha
 
 ### Changed

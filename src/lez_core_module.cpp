@@ -362,7 +362,7 @@ std::string LEZCoreModule::name() const {
 }
 
 std::string LEZCoreModule::version() const {
-    return "0.4.0-alpha.2";
+    return "0.4.0-alpha.3";
 }
 
 // === Account Management ===
