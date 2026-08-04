@@ -56,6 +56,7 @@ public:
     int64_t sync_to_block(int64_t block_id);
     int64_t get_last_synced_block();
     int64_t get_current_block_height();
+    std::string get_local_public_block_history(int64_t start_block_id, const std::string& expected_tip_json);
 
     // === Pinata claiming ===
     std::string claim_pinata(const std::string& pinata_account_id_hex, const std::string& winner_account_id_hex, const std::string& solution_le16_hex);

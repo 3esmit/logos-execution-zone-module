@@ -5,6 +5,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <filesystem>
+#include <limits>
 #include <random>
 #include <string_view>
 #include <vector>
@@ -152,6 +153,44 @@ bool hexToBytes32(const std::string& hex, FfiBytes32* output_bytes) {
     if (!hexToBytes(hex, buffer, 32))
         return false;
     memcpy(output_bytes->data, buffer.data(), 32);
+    return true;
+}
+
+bool parseLocalHistoryExpectedTip(
+    const std::string& expectedTipJson,
+    FfiLocalBlockHeaderReceiptV1& output)
+{
+    const nlohmann::json parsed =
+        nlohmann::json::parse(expectedTipJson, nullptr, false);
+    if (parsed.is_discarded() || !parsed.is_object()
+        || parsed.size() != 3U
+        || !parsed.contains("block_id")
+        || !parsed.contains("block_hash")
+        || !parsed.contains("previous_block_hash")
+        || !parsed["block_id"].is_number_integer()
+        || !parsed["block_hash"].is_string()
+        || !parsed["previous_block_hash"].is_string()) {
+        return false;
+    }
+
+    const std::int64_t signedBlockId =
+        parsed["block_id"].get<std::int64_t>();
+    if (signedBlockId <= 0)
+        return false;
+
+    const std::uint64_t blockId =
+        static_cast<std::uint64_t>(signedBlockId);
+    if (blockId == 0U
+        || blockId > static_cast<std::uint64_t>(
+            std::numeric_limits<std::int64_t>::max())
+        || !hexToBytes32(parsed["block_hash"].get<std::string>(),
+                          &output.block_hash)
+        || !hexToBytes32(
+            parsed["previous_block_hash"].get<std::string>(),
+            &output.previous_block_hash)) {
+        return false;
+    }
+    output.block_id = blockId;
     return true;
 }
 
@@ -496,6 +535,35 @@ int64_t LEZCoreModule::get_current_block_height() {
         return -1;
     }
     return static_cast<int64_t>(block_height);
+}
+
+std::string LEZCoreModule::get_local_public_block_history(
+    const int64_t start_block_id,
+    const std::string& expected_tip_json)
+{
+    if (walletHandle == nullptr || start_block_id < 0)
+        return {};
+
+    FfiLocalBlockHeaderReceiptV1 expectedTip{};
+    const FfiLocalBlockHeaderReceiptV1* expectedTipPointer = nullptr;
+    if (!expected_tip_json.empty()) {
+        if (!parseLocalHistoryExpectedTip(expected_tip_json, expectedTip))
+            return {};
+        expectedTipPointer = &expectedTip;
+    }
+
+    char* historyJson = nullptr;
+    const WalletFfiError error = wallet_ffi_get_local_public_block_history(
+        walletHandle,
+        static_cast<std::uint64_t>(start_block_id),
+        expectedTipPointer,
+        &historyJson);
+    if (error != SUCCESS || historyJson == nullptr)
+        return {};
+
+    std::string result(historyJson);
+    wallet_ffi_free_string(historyJson);
+    return result;
 }
 
 // === Pinata claiming ===
