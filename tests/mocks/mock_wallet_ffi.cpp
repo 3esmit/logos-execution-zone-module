@@ -450,6 +450,11 @@ WalletFfiError wallet_ffi_register_public_account(WalletHandle*, const FfiBytes3
     return fillTransferResult("wallet_ffi_register_public_account", out_result);
 }
 
+WalletFfiError wallet_ffi_register_public_account_local(WalletHandle*, const FfiBytes32*, FfiTransferResult* out_result) {
+    LOGOS_CMOCK_RECORD("wallet_ffi_register_public_account_local");
+    return fillTransferResult("wallet_ffi_register_public_account_local", out_result);
+}
+
 WalletFfiError wallet_ffi_register_private_account(WalletHandle*, const FfiBytes32*, FfiTransferResult* out_result) {
     LOGOS_CMOCK_RECORD("wallet_ffi_register_private_account");
     return fillTransferResult("wallet_ffi_register_private_account", out_result);

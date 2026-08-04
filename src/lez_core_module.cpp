@@ -70,12 +70,23 @@ constexpr auto Secrets = "secrets";
 constexpr std::string_view LezTestnetSequencerAddress = "https://testnet.lez.logos.co";
 constexpr std::string_view LezTestnetAuthenticatedTransferProgramId =
     "dcbbfebcd59399961ed9973b8307dc475fd4c5ca5779aacfe7588f7dbc3f4a71";
+constexpr std::string_view LezLocalDevelopmentSequencerAddress =
+    "http://127.0.0.1:3040";
 
-bool isLezTestnetSequencer(std::string address) {
+void normalizeSequencerAddress(std::string& address) {
     while (!address.empty() && address.back() == '/') {
         address.pop_back();
     }
+}
+
+bool isLezTestnetSequencer(std::string address) {
+    normalizeSequencerAddress(address);
     return address == LezTestnetSequencerAddress;
+}
+
+bool isLezLocalDevelopmentSequencer(std::string address) {
+    normalizeSequencerAddress(address);
+    return address == LezLocalDevelopmentSequencerAddress;
 }
 
 std::vector<uint32_t> authenticatedTransferWords(const uint8_t (&amount)[16]) {
@@ -895,7 +906,8 @@ std::string LEZCoreModule::register_public_account(const std::string& account_id
         return transferResultToJson(nullptr, "register_public_account: invalid account_id_hex");
     }
 
-    if (isLezTestnetSequencer(get_sequencer_addr())) {
+    const std::string sequencerAddress = get_sequencer_addr();
+    if (isLezTestnetSequencer(sequencerAddress)) {
         // AuthenticatedTransferInstruction::Initialize is enum variant 1.
         return send_generic_public_transaction(
             {account_id_hex},
@@ -903,6 +915,26 @@ std::string LEZCoreModule::register_public_account(const std::string& account_id
             {1},
             std::string(LezTestnetAuthenticatedTransferProgramId)
         );
+    }
+
+    if (isLezLocalDevelopmentSequencer(sequencerAddress)) {
+        FfiTransferResult result{};
+        const WalletFfiError error = wallet_ffi_register_public_account_local(
+            walletHandle,
+            &id,
+            &result);
+        if (error != SUCCESS) {
+            fprintf(stderr,
+                    "register_public_account: local wallet FFI error %d\n",
+                    error);
+            return transferResultToJson(
+                nullptr,
+                "register_public_account: local wallet FFI error "
+                    + std::to_string(error));
+        }
+        std::string resultJson = transferResultToJson(&result, std::string());
+        wallet_ffi_free_transfer_result(&result);
+        return resultJson;
     }
 
     FfiTransferResult result{};

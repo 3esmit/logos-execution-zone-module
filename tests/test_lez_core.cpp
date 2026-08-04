@@ -491,6 +491,20 @@ LOGOS_TEST(register_public_account_uses_convenience_path_outside_testnet) {
     LOGOS_ASSERT_TRUE(obj["success"].get<bool>());
 }
 
+LOGOS_TEST(register_public_account_uses_local_development_program) {
+    auto t = LogosTestContext("logos_execution_zone");
+    t.mockCFunction("wallet_ffi_get_sequencer_addr").returns("http://127.0.0.1:3040/");
+    LEZCoreModule module;
+
+    const nlohmann::json obj = parseObject(module.register_public_account(VALID_ID));
+
+    LOGOS_ASSERT_EQ(t.cFunctionCallCount("wallet_ffi_get_sequencer_addr"), 1);
+    LOGOS_ASSERT(t.cFunctionCalled("wallet_ffi_register_public_account_local"));
+    LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_send_generic_public_transaction"));
+    LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_register_public_account"));
+    LOGOS_ASSERT_TRUE(obj["success"].get<bool>());
+}
+
 LOGOS_TEST(register_public_account_uses_deployed_testnet_program) {
     auto t = LogosTestContext("logos_execution_zone");
     t.mockCFunction("wallet_ffi_get_sequencer_addr").returns("https://testnet.lez.logos.co");
