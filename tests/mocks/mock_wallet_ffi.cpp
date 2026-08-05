@@ -32,6 +32,7 @@ std::string lastOpenStatisticsPath;
 uint64_t lastLocalHistoryStartBlockId = 0U;
 bool lastLocalHistoryHasExpectedTip = false;
 uint64_t lastLocalHistoryExpectedTipBlockId = 0U;
+uint64_t lastLocalHistoryExpectedTipTimestamp = 0U;
 std::array<uint8_t, 32> lastLocalHistoryBlockHash{};
 std::array<uint8_t, 32> lastLocalHistoryPreviousBlockHash{};
 } // namespace MockWalletFfiCapture
@@ -344,11 +345,14 @@ WalletFfiError wallet_ffi_get_local_public_block_history(
     MockWalletFfiCapture::lastLocalHistoryHasExpectedTip =
         expected_tip != nullptr;
     MockWalletFfiCapture::lastLocalHistoryExpectedTipBlockId = 0U;
+    MockWalletFfiCapture::lastLocalHistoryExpectedTipTimestamp = 0U;
     MockWalletFfiCapture::lastLocalHistoryBlockHash.fill(0U);
     MockWalletFfiCapture::lastLocalHistoryPreviousBlockHash.fill(0U);
     if (expected_tip != nullptr) {
         MockWalletFfiCapture::lastLocalHistoryExpectedTipBlockId =
             expected_tip->block_id;
+        MockWalletFfiCapture::lastLocalHistoryExpectedTipTimestamp =
+            expected_tip->timestamp;
         std::copy_n(
             expected_tip->block_hash.data,
             32U,

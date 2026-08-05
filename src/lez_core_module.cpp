@@ -174,13 +174,15 @@ bool parseLocalHistoryExpectedTip(
     const nlohmann::json parsed =
         nlohmann::json::parse(expectedTipJson, nullptr, false);
     if (parsed.is_discarded() || !parsed.is_object()
-        || parsed.size() != 3U
+        || parsed.size() != 4U
         || !parsed.contains("block_id")
         || !parsed.contains("block_hash")
         || !parsed.contains("previous_block_hash")
+        || !parsed.contains("timestamp")
         || !parsed["block_id"].is_number_integer()
         || !parsed["block_hash"].is_string()
-        || !parsed["previous_block_hash"].is_string()) {
+        || !parsed["previous_block_hash"].is_string()
+        || !parsed["timestamp"].is_number_unsigned()) {
         return false;
     }
 
@@ -202,6 +204,7 @@ bool parseLocalHistoryExpectedTip(
         return false;
     }
     output.block_id = blockId;
+    output.timestamp = parsed["timestamp"].get<std::uint64_t>();
     return true;
 }
 

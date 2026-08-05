@@ -31,7 +31,7 @@ static nlohmann::json parseObject(const std::string& json) {
 LOGOS_TEST(name_and_version) {
     LEZCoreModule module;
     LOGOS_ASSERT_EQ(module.name(), std::string("lez_core"));
-    LOGOS_ASSERT_EQ(module.version(), std::string("0.4.0-alpha.2"));
+    LOGOS_ASSERT_EQ(module.version(), std::string("0.4.0-alpha.3"));
 }
 
 // ============================================================================
@@ -248,7 +248,7 @@ LOGOS_TEST(get_local_public_block_history_uses_configured_wallet_leader) {
     auto t = LogosTestContext("logos_execution_zone");
     t.mockCFunction("wallet_ffi_open").returns(1);
     t.mockCFunction("local_public_block_history_json").returns(
-        "{\"snapshot_tip\":{\"block_id\":17},\"blocks\":[],\"next_block_id\":null}");
+        "{\"snapshot_tip\":{\"block_id\":17,\"timestamp\":1700},\"blocks\":[],\"next_block_id\":null}");
     LEZCoreModule module;
     LOGOS_ASSERT_EQ(module.open("/cfg", "/store"), static_cast<int64_t>(SUCCESS));
 
@@ -257,7 +257,7 @@ LOGOS_TEST(get_local_public_block_history_uses_configured_wallet_leader) {
         "{\"block_id\":17,\"block_hash\":\""
         + std::string(64, 'a')
         + "\",\"previous_block_hash\":\""
-        + std::string(64, 'b') + "\"}");
+        + std::string(64, 'b') + "\",\"timestamp\":1700}");
 
     LOGOS_ASSERT(t.cFunctionCalled("wallet_ffi_get_local_public_block_history"));
     LOGOS_ASSERT(t.cFunctionCalled("wallet_ffi_free_string"));
@@ -269,6 +269,9 @@ LOGOS_TEST(get_local_public_block_history_uses_configured_wallet_leader) {
         MockWalletFfiCapture::lastLocalHistoryExpectedTipBlockId,
         static_cast<uint64_t>(17));
     LOGOS_ASSERT_EQ(
+        MockWalletFfiCapture::lastLocalHistoryExpectedTipTimestamp,
+        static_cast<uint64_t>(1700));
+    LOGOS_ASSERT_EQ(
         MockWalletFfiCapture::lastLocalHistoryBlockHash[0],
         static_cast<uint8_t>(0xaa));
     LOGOS_ASSERT_EQ(
@@ -276,7 +279,7 @@ LOGOS_TEST(get_local_public_block_history_uses_configured_wallet_leader) {
         static_cast<uint8_t>(0xbb));
     LOGOS_ASSERT_EQ(
         response,
-        std::string("{\"snapshot_tip\":{\"block_id\":17},\"blocks\":[],\"next_block_id\":null}"));
+        std::string("{\"snapshot_tip\":{\"block_id\":17,\"timestamp\":1700},\"blocks\":[],\"next_block_id\":null}"));
 }
 
 LOGOS_TEST(get_local_public_block_history_rejects_invalid_cursor_before_ffi) {
@@ -289,6 +292,17 @@ LOGOS_TEST(get_local_public_block_history_rejects_invalid_cursor_before_ffi) {
         module.get_local_public_block_history(-1, std::string()).empty());
     LOGOS_ASSERT_TRUE(
         module.get_local_public_block_history(1, "{\"block_id\":0}").empty());
+    LOGOS_ASSERT_TRUE(
+        module.get_local_public_block_history(
+            1,
+            "{\"block_id\":1,\"block_hash\":\""
+            + std::string(64, 'a')
+            + "\",\"previous_block_hash\":\""
+            + std::string(64, 'b')
+            + "\",\"timestamp\":-1}")
+            .empty());
+    LOGOS_ASSERT_TRUE(
+        module.get_local_public_block_history(1, "not-json").empty());
     LOGOS_ASSERT_TRUE(
         module.get_local_public_block_history(1, "{\"block_id\":-1,\"block_hash\":\""
             + std::string(64, 'a')

@@ -36,6 +36,7 @@ typedef struct FfiLocalBlockHeaderReceiptV1 {
     uint64_t block_id;
     FfiBytes32 block_hash;
     FfiBytes32 previous_block_hash;
+    uint64_t timestamp;
 } FfiLocalBlockHeaderReceiptV1;
 
 // Program ID - 8 u32 values (32 bytes total).
