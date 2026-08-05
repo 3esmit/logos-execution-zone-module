@@ -23,6 +23,7 @@ extern std::string lastOpenStatisticsPath;
 extern uint64_t lastLocalHistoryStartBlockId;
 extern bool lastLocalHistoryHasExpectedTip;
 extern uint64_t lastLocalHistoryExpectedTipBlockId;
+extern uint64_t lastLocalHistoryExpectedTipTimestamp;
 extern std::array<uint8_t, 32> lastLocalHistoryBlockHash;
 extern std::array<uint8_t, 32> lastLocalHistoryPreviousBlockHash;
 
