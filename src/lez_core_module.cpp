@@ -89,8 +89,8 @@ bool isLezLocalDevelopmentSequencer(std::string address) {
     return address == LezLocalDevelopmentSequencerAddress;
 }
 
-std::vector<uint32_t> authenticatedTransferWords(const uint8_t (&amount)[16]) {
-    std::vector<uint32_t> words;
+std::vector<uint64_t> authenticatedTransferWords(const uint8_t (&amount)[16]) {
+    std::vector<uint64_t> words;
     words.reserve(5);
     // RISC Zero serde encodes the Transfer enum variant first, then a u128 as
     // four little-endian u32 words. The deployed Testnet program reads this
@@ -98,10 +98,10 @@ std::vector<uint32_t> authenticatedTransferWords(const uint8_t (&amount)[16]) {
     words.push_back(0);
     for (size_t offset = 0; offset < sizeof(amount); offset += sizeof(uint32_t)) {
         words.push_back(
-            static_cast<uint32_t>(amount[offset])
-            | (static_cast<uint32_t>(amount[offset + 1]) << 8U)
-            | (static_cast<uint32_t>(amount[offset + 2]) << 16U)
-            | (static_cast<uint32_t>(amount[offset + 3]) << 24U)
+            static_cast<uint64_t>(amount[offset])
+            | (static_cast<uint64_t>(amount[offset + 1]) << 8U)
+            | (static_cast<uint64_t>(amount[offset + 2]) << 16U)
+            | (static_cast<uint64_t>(amount[offset + 3]) << 24U)
         );
     }
     return words;
@@ -1128,7 +1128,7 @@ std::vector<uint8_t> LEZCoreModule::authenticated_transfer_elf() {
 std::string LEZCoreModule::send_generic_public_transaction(
         const std::vector<std::string>& account_ids,
         const std::vector<bool>& signing_requirements,
-        const std::vector<uint32_t>& instruction,
+        const std::vector<uint64_t>& instruction,
         const std::string& program_id_hex
 ) {
     if (account_ids.empty()) {
@@ -1178,7 +1178,16 @@ std::string LEZCoreModule::send_generic_public_transaction(
     const FfiAccountIdentity *account_identities = identities_resolved.data();
     uintptr_t account_identities_size = static_cast<uintptr_t>(identities_resolved.size());
 
-    const uint32_t* input_instruction_data = instruction.data();
+    std::vector<uint32_t> ffi_instruction;
+    ffi_instruction.reserve(instruction.size());
+    for (const uint64_t word : instruction) {
+        if (word > std::numeric_limits<uint32_t>::max()) {
+            return genericTransactionResultToJson(
+                nullptr, "send_generic_public_transaction: instruction word exceeds uint32_t");
+        }
+        ffi_instruction.push_back(static_cast<uint32_t>(word));
+    }
+    const uint32_t* input_instruction_data = ffi_instruction.data();
     uintptr_t input_instruction_data_size = static_cast<uintptr_t>(instruction.size());
 
     std::vector<uint8_t> program_id_bytes;
@@ -1221,7 +1230,7 @@ std::string LEZCoreModule::send_generic_public_transaction(
 
 std::string LEZCoreModule::send_generic_private_transaction(
         const std::vector<std::string>& account_ids,
-        const std::vector<uint32_t>& instruction,
+        const std::vector<uint64_t>& instruction,
         const std::vector<uint8_t>& program_elf,
         const std::vector<std::vector<uint8_t>>& program_dependencies
 ) {
@@ -1248,7 +1257,16 @@ std::string LEZCoreModule::send_generic_private_transaction(
     const FfiAccountIdentity *account_identities = identities_resolved.data();
     uintptr_t account_identities_size = static_cast<uintptr_t>(identities_resolved.size());
 
-    const uint32_t* input_instruction_data = instruction.data();
+    std::vector<uint32_t> ffi_instruction;
+    ffi_instruction.reserve(instruction.size());
+    for (const uint64_t word : instruction) {
+        if (word > std::numeric_limits<uint32_t>::max()) {
+            return transferResultToJson(
+                nullptr, "send_generic_private_transaction: instruction word exceeds uint32_t");
+        }
+        ffi_instruction.push_back(static_cast<uint32_t>(word));
+    }
+    const uint32_t* input_instruction_data = ffi_instruction.data();
     uintptr_t input_instruction_data_size = static_cast<uintptr_t>(instruction.size());
 
     FfiProgram main_program {};
@@ -1360,8 +1378,12 @@ std::string LEZCoreModule::create_new(
     return mnemonic;
 }
 
-int64_t LEZCoreModule::restore_storage(const std::string& mnemonic, const std::string password, uint32_t depth) {
-    const WalletFfiError error = wallet_ffi_restore_data(walletHandle, mnemonic.c_str(), password.c_str(), depth);
+int64_t LEZCoreModule::restore_storage(const std::string& mnemonic, const std::string password, uint64_t depth) {
+    if (depth > std::numeric_limits<uint32_t>::max()) {
+        return INTERNAL_ERROR;
+    }
+    const WalletFfiError error = wallet_ffi_restore_data(
+        walletHandle, mnemonic.c_str(), password.c_str(), static_cast<uint32_t>(depth));
     if (error != SUCCESS) {
         fprintf(stderr, "restore_storage: wallet FFI error %d\n", error);
         return error;
