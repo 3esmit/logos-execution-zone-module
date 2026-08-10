@@ -1148,6 +1148,29 @@ std::string LEZCoreModule::send_program_deployment_transaction(
     return resultJson;
 }
 
+bool LEZCoreModule::poll_transaction_status(const std::string& tx_hash_hex) {
+    FfiBytes32 tx_hash{};
+    if (!hexToBytes32(tx_hash_hex, &tx_hash)) {
+        fprintf(stderr, "poll_transaction_status: invalid tx_hash_hex\n");
+        return false;
+    }
+
+    bool is_found = false;
+
+    const WalletFfiError error = wallet_ffi_poll_transaction_status(
+        walletHandle, 
+        tx_hash,
+        &is_found
+    );
+
+    if (error != SUCCESS) {
+        fprintf(stderr, "poll_transaction_status: wallet FFI error %d\n", error);
+        return false;
+    }
+
+    return is_found;
+}
+
 // === Wallet Lifecycle ===
 
 std::string LEZCoreModule::create_new(
