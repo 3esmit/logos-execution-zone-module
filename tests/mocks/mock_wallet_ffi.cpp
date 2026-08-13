@@ -490,6 +490,13 @@ FfiTransactionResult *out_result) {
     return fillTransactionResult("wallet_ffi_program_deployment", out_result);
 }
 
+WalletFfiError wallet_ffi_poll_transaction_status(WalletHandle *handle, FfiBytes32 tx_hash, bool *transaction_status) {
+    LOGOS_CMOCK_RECORD("wallet_ffi_poll_transaction_status");
+    const int err = LogosCMockStore::instance().getReturn<int>("wallet_ffi_program_deployment");
+    *transaction_status = (err == 0);
+    return static_cast<WalletFfiError>(err);
+}
+
 // === Bridge (L1 Bedrock <-> L2) ===
 
 WalletFfiError wallet_ffi_bridge_withdraw(

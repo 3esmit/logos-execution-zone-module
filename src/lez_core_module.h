@@ -81,6 +81,8 @@ public:
     std::string send_generic_private_transaction(const std::vector<std::string>& account_ids, const std::vector<uint32_t>& instruction, const std::vector<uint8_t>& program_elf, const std::vector<std::vector<uint8_t>>& program_dependencies);
     std::string send_program_deployment_transaction(const std::vector<uint8_t>& program_elf);
 
+    bool poll_transaction_status(const std::string& tx_hash_hex);
+
     // === Bridge (L1 Bedrock <-> L2) ===
     std::string bridge_withdraw(const std::string& from_hex, const std::string& bedrock_account_pk_hex, uint64_t amount);
 
