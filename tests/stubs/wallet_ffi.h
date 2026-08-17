@@ -323,6 +323,10 @@ WalletFfiError wallet_ffi_program_deployment(WalletHandle *handle,
                                                   uintptr_t elf_size,
                                                   FfiTransactionResult *out_result);
 
+WalletFfiError wallet_ffi_poll_transaction_status(WalletHandle *handle,
+                                                       FfiBytes32 tx_hash,
+                                                       bool *transaction_status);
+
 WalletFfiError wallet_ffi_resolve_public_account(FfiBytes32 account_id,
                                                       bool needs_sign,
                                                       FfiAccountIdentity *out_account_identity);
