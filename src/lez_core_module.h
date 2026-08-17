@@ -30,8 +30,8 @@ public:
     std::string version() const;
 
     // === Wallet Lifecycle ===
-    std::string create_new(const std::string& config_path, const std::string& storage_path, const std::string& password);
-    int64_t open(const std::string& config_path, const std::string& storage_path);
+    std::string create_new(const std::string& config_path, const std::string& storage_path, const std::string& statistics_path, const std::string& password);
+    int64_t open(const std::string& config_path, const std::string& storage_path, const std::string& statistics_path);
     int64_t save();
 
     int64_t restore_storage(const std::string& mnemonic, const std::string password, uint64_t depth);
@@ -81,6 +81,8 @@ public:
     std::string send_generic_public_transaction(const std::vector<std::string>& account_ids, const std::vector<bool>& signing_requirements, const std::vector<uint64_t>& instruction, const std::string& program_id_hex);
     std::string send_generic_private_transaction(const std::vector<std::string>& account_ids, const std::vector<uint64_t>& instruction, const std::vector<uint8_t>& program_elf, const std::vector<std::vector<uint8_t>>& program_dependencies);
     std::string send_program_deployment_transaction(const std::vector<uint8_t>& program_elf);
+
+    bool poll_transaction_status(const std::string& tx_hash_hex);
 
     // === Bridge (L1 Bedrock <-> L2) ===
     std::string bridge_withdraw(const std::string& from_hex, const std::string& bedrock_account_pk_hex, uint64_t amount);
