@@ -250,7 +250,7 @@ LOGOS_TEST(get_local_public_block_history_uses_configured_wallet_leader) {
     t.mockCFunction("local_public_block_history_json").returns(
         "{\"snapshot_tip\":{\"block_id\":17,\"timestamp\":1700},\"blocks\":[],\"next_block_id\":null}");
     LEZCoreModule module;
-    LOGOS_ASSERT_EQ(module.open("/cfg", "/store"), static_cast<int64_t>(SUCCESS));
+    LOGOS_ASSERT_EQ(module.open("/cfg", "/store", "/stats"), static_cast<int64_t>(SUCCESS));
 
     const std::string response = module.get_local_public_block_history(
         18,
@@ -286,7 +286,7 @@ LOGOS_TEST(get_local_public_block_history_rejects_invalid_cursor_before_ffi) {
     auto t = LogosTestContext("logos_execution_zone");
     t.mockCFunction("wallet_ffi_open").returns(1);
     LEZCoreModule module;
-    LOGOS_ASSERT_EQ(module.open("/cfg", "/store"), static_cast<int64_t>(SUCCESS));
+    LOGOS_ASSERT_EQ(module.open("/cfg", "/store", "/stats"), static_cast<int64_t>(SUCCESS));
 
     LOGOS_ASSERT_TRUE(
         module.get_local_public_block_history(-1, std::string()).empty());
@@ -880,7 +880,7 @@ LOGOS_TEST(create_new_success_then_double_open_fails) {
 
     LOGOS_ASSERT_TRUE(!module.create_new("/cfg", "/store", "/stats", "pw").empty());
     LOGOS_ASSERT(t.cFunctionCalled("wallet_ffi_create_new"));
-    LOGOS_ASSERT_EQ(MockWalletFfiCapture::lastCreateStatisticsPath, std::string("/statistics.json"));
+    LOGOS_ASSERT_EQ(MockWalletFfiCapture::lastCreateStatisticsPath, std::string("/stats"));
     // Second attempt: already open.
     LOGOS_ASSERT_EQ(module.create_new("/cfg", "/store", "/stats", "pw"), "");
 }
@@ -900,7 +900,7 @@ LOGOS_TEST(open_success) {
 
     LOGOS_ASSERT_EQ(module.open("/cfg", "/store", "/stats"), static_cast<int64_t>(SUCCESS));
     LOGOS_ASSERT(t.cFunctionCalled("wallet_ffi_open"));
-    LOGOS_ASSERT_EQ(MockWalletFfiCapture::lastOpenStatisticsPath, std::string("/statistics.json"));
+    LOGOS_ASSERT_EQ(MockWalletFfiCapture::lastOpenStatisticsPath, std::string("/stats"));
 }
 
 LOGOS_TEST(save_forwards_return_code) {
