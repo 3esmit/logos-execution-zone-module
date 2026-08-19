@@ -366,6 +366,14 @@ std::string LEZCoreModule::version() const {
     return "0.4.0-alpha.3";
 }
 
+// === Wallet Location ===
+
+std::string LEZCoreModule::wallet_dir() {
+    if (!isContextReady() || instancePersistencePath().empty())
+        return LEZ_NO_WALLET_DIR;
+    return instancePersistencePath();
+}
+
 // === Account Management ===
 
 std::string LEZCoreModule::create_account_public() {
