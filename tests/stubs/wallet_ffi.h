@@ -49,7 +49,7 @@ typedef struct FfiU128 {
 
 // Full account record.
 typedef struct FfiAccount {
-    FfiProgramId program_owner;
+    FfiBytes32 program_owner;
     FfiBytes16 balance;
     FfiBytes16 nonce;
     uint8_t* data;
@@ -100,12 +100,6 @@ typedef enum FfiAccountIdentityKind {
   PRIVATE_SHARED = 7,
   PRIVATE_PDA_SHARED = 8,
 } FfiAccountIdentityKind;
-
-typedef struct FfiInstructionWords {
-  uint32_t *instruction_words;
-  uintptr_t instruction_words_size;
-  enum WalletFfiError error;
-} FfiInstructionWords;
 
 /**
  * Struct representing an account identity, given to `AccountManager` at intialization.
@@ -227,32 +221,6 @@ int wallet_ffi_sync_to_block(WalletHandle* handle, uint64_t block_id);
 WalletFfiError wallet_ffi_get_last_synced_block(WalletHandle* handle, uint64_t* out_block_id);
 WalletFfiError wallet_ffi_get_current_block_height(WalletHandle* handle, uint64_t* out_block_height);
 
-// === Pinata claiming ===
-
-WalletFfiError wallet_ffi_claim_pinata(
-    WalletHandle* handle,
-    const FfiBytes32* pinata_account_id,
-    const FfiBytes32* winner_account_id,
-    const uint8_t (*solution)[16],
-    FfiTransferResult* out_result);
-
-WalletFfiError wallet_ffi_claim_pinata_private_owned_already_initialized(
-    WalletHandle* handle,
-    const FfiBytes32* pinata_account_id,
-    const FfiBytes32* winner_account_id,
-    const uint8_t (*solution)[16],
-    uintptr_t winner_proof_index,
-    const uint8_t (*winner_proof_siblings)[32],
-    uintptr_t winner_proof_siblings_len,
-    FfiTransferResult* out_result);
-
-WalletFfiError wallet_ffi_claim_pinata_private_owned_not_initialized(
-    WalletHandle* handle,
-    const FfiBytes32* pinata_account_id,
-    const FfiBytes32* winner_account_id,
-    const uint8_t (*solution)[16],
-    FfiTransferResult* out_result);
-
 // === Transfers / registration ===
 
 WalletFfiError wallet_ffi_transfer_public(
@@ -280,8 +248,6 @@ WalletFfiError wallet_ffi_transfer_private_owned(
     WalletHandle* handle, const FfiBytes32* from, const FfiBytes32* to,
     const uint8_t (*amount)[16], FfiTransferResult* out_result);
 
-WalletFfiError wallet_ffi_register_public_account(WalletHandle* handle, const FfiBytes32* account_id, FfiTransferResult* out_result);
-WalletFfiError wallet_ffi_register_private_account(WalletHandle* handle, const FfiBytes32* account_id, FfiTransferResult* out_result);
 
 WalletFfiError wallet_ffi_transfer_elf(FfiProgram *ffi_program);
 WalletFfiError wallet_ffi_token_elf(FfiProgram *ffi_program);
@@ -291,23 +257,27 @@ WalletFfiError wallet_ffi_amm_elf(FfiProgram *ffi_program);
 WalletFfiError wallet_ffi_send_generic_public_transaction(WalletHandle *handle,
                                                                const FfiAccountIdentity *account_identities,
                                                                uintptr_t account_identities_size,
-                                                               const uint32_t *instruction_words,
-                                                               uintptr_t instruction_words_size,
+                                                               const uint8_t *instruction_data,
+                                                               uintptr_t instruction_data_size,
                                                                FfiProgramId program_id,
                                                                FfiTransactionResult *out_result);
 
 WalletFfiError wallet_ffi_send_generic_private_transaction(WalletHandle *handle,
                                                                const FfiAccountIdentity *account_identities,
                                                                uintptr_t account_identities_size,
-                                                               const uint32_t *instruction_words,
-                                                               uintptr_t instruction_words_size,
+                                                               const uint8_t *instruction_data,
+                                                               uintptr_t instruction_data_size,
                                                                const FfiProgramWithDependencies *program_with_dependencies,
                                                                FfiTransactionResult *out_result);    
 
-WalletFfiError wallet_ffi_program_deployment(WalletHandle *handle,
-                                                  const uint8_t *elf_data,
-                                                  uintptr_t elf_size,
-                                                  FfiTransactionResult *out_result);
+WalletFfiError wallet_ffi_program_loader_deploy(WalletHandle *handle,
+                                                const FfiBytes32 *header,
+                                                const FfiBytes32 *segments,
+                                                uintptr_t segments_len,
+                                                const uint8_t *elf_data,
+                                                uintptr_t elf_size,
+                                                bool immutable,
+                                                FfiTransactionResult *out_result);
 
 WalletFfiError wallet_ffi_poll_transaction_status(WalletHandle *handle,
                                                        FfiBytes32 tx_hash,
@@ -319,7 +289,6 @@ WalletFfiError wallet_ffi_resolve_public_account(FfiBytes32 account_id,
 WalletFfiError wallet_ffi_resolve_private_account(WalletHandle *handle,
                                                        FfiBytes32 account_id,
                                                        FfiAccountIdentity *out_account_identity);
-void wallet_ffi_free_instruction_words(FfiInstructionWords *words);
 void wallet_ffi_free_account_identity(FfiAccountIdentity *account_identity);
 void wallet_ffi_free_transfer_result(FfiTransferResult* result);
 void wallet_ffi_free_transaction_result(FfiTransactionResult *result);
@@ -330,14 +299,6 @@ void wallet_ffi_free_ffi_program(FfiProgram *ffi_program);
 WalletFfiError wallet_ffi_bridge_withdraw(
     WalletHandle* handle, const FfiBytes32* from, uint64_t amount,
     const FfiBytes32* bedrock_account_pk, FfiTransferResult* out_result);
-
-// === Vault claiming ===
-
-WalletFfiError wallet_ffi_get_vault_balance(WalletHandle* handle, const FfiBytes32* owner, uint8_t (*out_balance)[16]);
-WalletFfiError wallet_ffi_vault_claim(
-    WalletHandle* handle, const FfiBytes32* owner, const uint8_t (*amount)[16], FfiTransferResult* out_result);
-WalletFfiError wallet_ffi_vault_claim_private(
-    WalletHandle* handle, const FfiBytes32* owner, const uint8_t (*amount)[16], FfiTransferResult* out_result);
 
 // === Configuration ===
 

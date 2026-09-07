@@ -21,6 +21,13 @@ constexpr const char* LEZ_NO_WALLET_DIR = "-";
 // NOTE: the generator parses this header line-by-line and only recognises a
 // method when its declaration ends with ';' on a single line. Keep every
 // method declaration on ONE line — multi-line signatures are silently dropped.
+//
+// This seems to be fixed upstream in logos-cpp-sdk #91;
+// (tracked in https://github.com/logos-co/logos-cpp-sdk/issues/59)
+// but our current pinned SDK does not include it; so instead we keep everything
+// single-line and disable formatting for this region
+//
+// clang-format off
 class LEZCoreModule : public LogosModuleContext {
 public:
     LEZCoreModule();
@@ -60,20 +67,15 @@ public:
     int64_t get_last_synced_block();
     int64_t get_current_block_height();
 
-    // === Pinata claiming ===
-    std::string claim_pinata(const std::string& pinata_account_id_hex, const std::string& winner_account_id_hex, const std::string& solution_le16_hex);
-    std::string claim_pinata_private_owned_already_initialized(const std::string& pinata_account_id_hex, const std::string& winner_account_id_hex, const std::string& solution_le16_hex, int64_t winner_proof_index, const std::string& winner_proof_siblings_json);
-    std::string claim_pinata_private_owned_not_initialized(const std::string& pinata_account_id_hex, const std::string& winner_account_id_hex, const std::string& solution_le16_hex);
-
     // === Operations ===
+    // A fresh public account is claimed by its first funded transfer (`to` owned by
+    // this wallet); there is no separate registration under fees.
     std::string transfer_public(const std::string& from_hex, const std::string& to_hex, const std::string& amount_le16_hex);
     std::string transfer_shielded(const std::string& from_hex, const std::string& to_keys_json, const std::string& amount_le16_hex);
     std::string transfer_deshielded(const std::string& from_hex, const std::string& to_hex, const std::string& amount_le16_hex);
     std::string transfer_private(const std::string& from_hex, const std::string& to_keys_json, const std::string& amount_le16_hex);
     std::string transfer_shielded_owned(const std::string& from_hex, const std::string& to_hex, const std::string& amount_le16_hex);
     std::string transfer_private_owned(const std::string& from_hex, const std::string& to_hex, const std::string& amount_le16_hex);
-    std::string register_public_account(const std::string& account_id_hex);
-    std::string register_private_account(const std::string& account_id_hex);
 
     std::vector<uint8_t> authenticated_transfer_elf();
     std::vector<uint8_t> token_elf();
@@ -84,20 +86,22 @@ public:
     // Qt/QtRO glue can serialize it across the module process boundary. Declaring
     // it as std::vector<uint32_t> makes the header->LIDL generator fall back to an
     // opaque `any` with no QDataStream operators, silently dropping every argument
-    // over QtRO. It carries the little-endian bytes of the RISC Zero u32 words.
+    // over QtRO. The bytes are the Borsh-serialized instruction, passed to the
+    // FFI untouched (`lee` expects preserialized instruction data).
     std::string send_generic_public_transaction(const std::vector<std::string>& account_ids, const std::vector<bool>& signing_requirements, const std::vector<uint8_t>& instruction, const std::string& program_id_hex);
-    std::string send_generic_private_transaction(const std::vector<std::string>& account_ids, const std::vector<uint32_t>& instruction, const std::vector<uint8_t>& program_elf, const std::vector<std::vector<uint8_t>>& program_dependencies);
-    std::string send_program_deployment_transaction(const std::vector<uint8_t>& program_elf);
+    std::string send_generic_private_transaction(const std::vector<std::string>& account_ids, const std::vector<uint8_t>& instruction, const std::vector<uint8_t>& program_elf, const std::vector<std::vector<uint8_t>>& program_dependencies);
+    // Deploys `program_elf` via `program_loader`: one write-once segment account per
+    // 96 KiB chunk of the ELF (in chain order), plus a header account pointing at the
+    // chain. The wallet must hold the signing keys for every account passed in.
+    //
+    // NOTE: the FFI passes no fee payer, so under fees this fails with PayerCannotFund
+    // (all deploy accounts are fresh). Tracked in logos-execution-zone#839.
+    std::string send_program_deployment_transaction(const std::string& header_account_id_hex, const std::vector<std::string>& segment_account_ids_hex, const std::vector<uint8_t>& program_elf, bool immutable);
 
     bool poll_transaction_status(const std::string& tx_hash_hex);
 
     // === Bridge (L1 Bedrock <-> L2) ===
     std::string bridge_withdraw(const std::string& from_hex, const std::string& bedrock_account_pk_hex, uint64_t amount);
-
-    // === Vault claiming (L1 deposits credited to an owner's vault account) ===
-    std::string get_vault_balance(const std::string& owner_account_id_hex);
-    std::string vault_claim(const std::string& owner_account_id_hex, const std::string& amount_le16_hex);
-    std::string vault_claim_private(const std::string& owner_account_id_hex, const std::string& amount_le16_hex);
 
     // === Configuration ===
     std::string get_sequencer_addr();
@@ -111,5 +115,6 @@ public:
 private:
     WalletHandle* walletHandle = nullptr;
 };
+// clang-format on
 
 #endif // LEZ_CORE_MODULE_H
