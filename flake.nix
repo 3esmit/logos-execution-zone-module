@@ -10,7 +10,7 @@
   inputs = {
     logos-module-builder.url = "github:logos-co/logos-module-builder";
     nix-bundle-lgx.url = "github:logos-co/nix-bundle-lgx";
-    logos-execution-zone.url = "github:logos-blockchain/logos-execution-zone?ref=v0.2.5-rc1";
+    logos-execution-zone.url = "github:logos-blockchain/logos-execution-zone?ref=v0.2.5-rc2";
   };
 
   outputs = inputs@{ logos-module-builder, ... }:
