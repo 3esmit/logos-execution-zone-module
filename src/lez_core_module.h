@@ -5,10 +5,13 @@
 #include <string>
 
 #include <logos_json.h>
+#include <logos_module_context.h>
 
 extern "C" {
 #include <wallet_ffi.h>
 }
+
+constexpr const char* LEZ_NO_WALLET_DIR = "-";
 
 // Universal (Qt-free) execution-zone core module. The Qt glue (provider
 // object + plugin) is generated from this header by logos-cpp-generator, which
@@ -18,7 +21,7 @@ extern "C" {
 // NOTE: the generator parses this header line-by-line and only recognises a
 // method when its declaration ends with ';' on a single line. Keep every
 // method declaration on ONE line — multi-line signatures are silently dropped.
-class LEZCoreModule {
+class LEZCoreModule : public LogosModuleContext {
 public:
     LEZCoreModule();
     ~LEZCoreModule();
@@ -28,8 +31,8 @@ public:
 
     std::string name() const;
     std::string version() const;
+    std::string wallet_dir();
 
-    // === Wallet Lifecycle ===
     std::string create_new(const std::string& config_path, const std::string& storage_path, const std::string& statistics_path, const std::string& password);
     int64_t open(const std::string& config_path, const std::string& storage_path, const std::string& statistics_path);
     int64_t save();
@@ -78,8 +81,17 @@ public:
     std::vector<uint8_t> amm_elf();
     std::vector<uint8_t> ata_elf();
 
+    // The maintained module-builder pin maps std::vector<uint64_t> to a typed
+    // LIDL uint array. Keep this wire shape: the compatibility FFI accepts
+    // uint32 words, while the module boundary must retain the maintained
+    // Inspector API. Values above uint32_t are rejected at the FFI boundary.
+    // The upstream byte-string variant is not ABI-compatible with this fork's
+    // public API.
     std::string send_generic_public_transaction(const std::vector<std::string>& account_ids, const std::vector<bool>& signing_requirements, const std::vector<uint64_t>& instruction, const std::string& program_id_hex);
     std::string send_generic_private_transaction(const std::vector<std::string>& account_ids, const std::vector<uint64_t>& instruction, const std::vector<uint8_t>& program_elf, const std::vector<std::vector<uint8_t>>& program_dependencies);
+    // Payer-aware deployment remains deferred until the maintained wallet FFI
+    // exposes the upstream payer parameters; this fork currently accepts only
+    // the legacy ELF-only deployment call.
     std::string send_program_deployment_transaction(const std::vector<uint8_t>& program_elf);
 
     bool poll_transaction_status(const std::string& tx_hash_hex);

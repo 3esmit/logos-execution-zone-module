@@ -7,6 +7,7 @@
 
 #include <array>
 #include <cstring>
+#include <limits>
 #include <string>
 #include <vector>
 
@@ -32,6 +33,32 @@ LOGOS_TEST(name_and_version) {
     LEZCoreModule module;
     LOGOS_ASSERT_EQ(module.name(), std::string("lez_core"));
     LOGOS_ASSERT_EQ(module.version(), std::string("0.4.0-alpha.3"));
+}
+
+// ============================================================================
+// Wallet location
+// ============================================================================
+
+// Constructed directly, so no host has stamped a persistence path onto it. It
+// must say so rather than invent one: a caller that receives a plausible-looking
+// path here would write a wallet somewhere the host does not manage and will
+// never clean up.
+// Never "" -- that answer is reserved for a call that never arrived, so a caller
+// can tell "no directory here" from "I could not reach you" and retry instead of
+// writing a wallet somewhere it invented.
+LOGOS_TEST(wallet_dir_reports_no_directory_without_a_provisioning_host) {
+    LEZCoreModule module;
+    LOGOS_ASSERT(!module.isContextReady());
+    LOGOS_ASSERT_EQ(module.wallet_dir(), std::string(LEZ_NO_WALLET_DIR));
+    LOGOS_ASSERT(!module.wallet_dir().empty());
+}
+
+LOGOS_TEST(wallet_dir_reports_provisioned_context_path) {
+    LEZCoreModule module;
+    module._logosCoreSetContext_("/module", "instance-1", "/persist/lez-core/instance-1");
+
+    LOGOS_ASSERT(module.isContextReady());
+    LOGOS_ASSERT_EQ(module.wallet_dir(), std::string("/persist/lez-core/instance-1"));
 }
 
 // ============================================================================
@@ -645,6 +672,19 @@ LOGOS_TEST(generic_public_transaction_rejects_malformed_vectors) {
     ));
     assertGenericRejection(empty_instruction);
     LOGOS_ASSERT_CONTAINS(empty_instruction["error"].get<std::string>(), std::string("instruction"));
+    LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_send_generic_public_transaction"));
+}
+
+LOGOS_TEST(generic_public_transaction_rejects_words_wider_than_ffi) {
+    auto t = LogosTestContext("logos_execution_zone");
+    LEZCoreModule module;
+
+    const nlohmann::json result = parseObject(module.send_generic_public_transaction(
+        {VALID_ID}, {true}, {std::numeric_limits<uint64_t>::max()}, std::string(64, 'c')
+    ));
+
+    LOGOS_ASSERT_FALSE(result["success"].get<bool>());
+    LOGOS_ASSERT_CONTAINS(result["error"].get<std::string>(), std::string("exceeds uint32_t"));
     LOGOS_ASSERT_FALSE(t.cFunctionCalled("wallet_ffi_send_generic_public_transaction"));
 }
 
