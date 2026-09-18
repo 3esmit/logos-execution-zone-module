@@ -81,8 +81,17 @@ public:
     std::vector<uint8_t> amm_elf();
     std::vector<uint8_t> ata_elf();
 
+    // The maintained module-builder pin maps std::vector<uint64_t> to a typed
+    // LIDL uint array. Keep this wire shape: the compatibility FFI accepts
+    // uint32 words, while the module boundary must retain the maintained
+    // Inspector API. Values above uint32_t are rejected at the FFI boundary.
+    // The upstream byte-string variant is not ABI-compatible with this fork's
+    // public API.
     std::string send_generic_public_transaction(const std::vector<std::string>& account_ids, const std::vector<bool>& signing_requirements, const std::vector<uint64_t>& instruction, const std::string& program_id_hex);
     std::string send_generic_private_transaction(const std::vector<std::string>& account_ids, const std::vector<uint64_t>& instruction, const std::vector<uint8_t>& program_elf, const std::vector<std::vector<uint8_t>>& program_dependencies);
+    // Payer-aware deployment remains deferred until the maintained wallet FFI
+    // exposes the upstream payer parameters; this fork currently accepts only
+    // the legacy ELF-only deployment call.
     std::string send_program_deployment_transaction(const std::vector<uint8_t>& program_elf);
 
     bool poll_transaction_status(const std::string& tx_hash_hex);
